@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Usage Bar</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="panel" class="panel">
+    <!-- Top navigation -->
+    <header class="topbar">
+      <div class="brand">
+        <span class="term-glyph">&gt;_</span>
+        <span class="brand-name">AI&nbsp;Usage&nbsp;Bar</span>
+      </div>
+      <nav class="tabs">
+        <button class="tab" data-tab="processes"><span class="ico">▦</span> Processes</button>
+        <button class="tab is-active" data-tab="usage"><span class="ico">▮▮</span> Usage</button>
+        <button class="tab" data-tab="git"><span class="ico">⑂</span> Git</button>
+        <button class="tab icon-only" data-tab="settings" title="Settings">⚙</button>
+        <button class="tab icon-only" id="closeBtn" title="Close">✕</button>
+      </nav>
+    </header>
+
+    <!-- Provider switch (Claude <-> Codex) -->
+    <div class="provider-switch">
+      <button class="prov is-active" data-provider="claude">Claude Code</button>
+      <button class="prov" data-provider="codex">Codex</button>
+    </div>
+
+    <main id="tab-usage" class="tab-body">
+      <!-- Rolling limit windows (5h / 7d) -->
+      <section class="card limits">
+        <div class="limit-row" data-k="fiveHour">
+          <span class="limit-label">5h</span>
+          <div class="seg" data-segments="10"></div>
+          <span class="limit-meta"><b class="pct">–</b> · <span class="reset">–</span></span>
+        </div>
+        <div class="limit-row" data-k="sevenDay">
+          <span class="limit-label">7d</span>
+          <div class="seg" data-segments="10"></div>
+          <span class="limit-meta"><b class="pct">–</b> · <span class="reset">–</span></span>
+        </div>
+        <div class="limits-src" id="limitsSrc"></div>
+      </section>
+
+      <!-- Hero: provider summary -->
+      <section class="card hero">
+        <div class="hero-head">
+          <span class="prov-logo" id="provLogo">✳</span>
+          <span class="prov-title" id="provTitle">Claude Code</span>
+          <span class="plan-badge" id="planBadge">Max 5× &nbsp;$100/mo</span>
+          <span class="since" id="sinceLabel">since Feb 1 ›</span>
+        </div>
+        <div class="stat-quad">
+          <div class="stat"><b id="hTokens">–</b><span>tokens</span></div>
+          <div class="stat"><b id="hSessions">–</b><span>sessions</span></div>
+          <div class="stat"><b id="hMessages">–</b><span>messages</span></div>
+          <div class="stat"><b id="hCost">–</b><span>API list est.</span></div>
+        </div>
+        <div class="stack" id="heroStack"></div>
+        <div class="legend" id="heroLegend"></div>
+        <div class="disclaimer">Local token logs × API pricing estimate (not your subscription spend)</div>
+        <div class="today-row">
+          <span class="today-label">Today</span>
+          <span class="today-stat"><b id="tMsgs" class="c-orange">–</b> msgs</span>
+          <span class="today-stat"><b id="tSessions" class="c-blue">–</b> sessions</span>
+          <span class="today-stat"><b id="tTools" class="c-amber">–</b> tools</span>
+          <span class="today-stat"><b id="tTokens">–</b> tokens</span>
+        </div>
+      </section>
+
+      <!-- Today's usage + last hour sparkline -->
+      <section class="card today-usage">
+        <div class="card-head">
+          <span class="card-title">Today's Usage</span>
+          <span class="card-right" id="todayCost">–</span>
+        </div>
+        <div class="big-number"><b id="todayTokens">–</b> tokens</div>
+        <div class="stack" id="todayStack"></div>
+        <div class="legend" id="todayLegend"></div>
+        <div class="spark-head">
+          <span class="muted">Last Hour</span>
+          <span class="c-amber" id="sparkRate">–</span>
+        </div>
+        <canvas id="sparkline" height="90"></canvas>
+      </section>
+
+      <!-- 14-day trend combo chart -->
+      <section class="card trend">
+        <div class="card-head">
+          <span class="card-title">14-Day Trend <span class="muted">▾</span></span>
+          <span class="legend-inline">
+            <i class="dot orange"></i> msgs&nbsp;&nbsp;<i class="dash blue"></i> tokens
+          </span>
+        </div>
+        <canvas id="trend" height="150"></canvas>
+        <div class="pill-row">
+          <span class="pill" id="pillAvg">–</span>
+          <span class="pill" id="pillTotalMsgs">–</span>
+          <span class="pill" id="pillTotalTokens">–</span>
+        </div>
+      </section>
+
+      <!-- Models breakdown -->
+      <section class="card models">
+        <div class="card-head">
+          <span class="card-title">Models</span>
+          <span class="card-right" id="modelsTotal">–</span>
+        </div>
+        <div class="stack" id="modelsStack"></div>
+        <div id="modelList" class="model-list"></div>
+      </section>
+    </main>
+
+    <!-- Processes -->
+    <main id="tab-processes" class="tab-body hidden">
+      <div id="procList"></div>
+      <section class="card hidden" id="procEmpty"><div class="placeholder">No AI processes detected right now.</div></section>
+    </main>
+
+    <!-- Git -->
+    <main id="tab-git" class="tab-body hidden">
+      <div id="gitList"></div>
+    </main>
+
+    <!-- Settings -->
+    <main id="tab-settings" class="tab-body hidden">
+      <section class="card" id="settingsCard"></section>
+    </main>
+  </div>
+
+  <script src="mock.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

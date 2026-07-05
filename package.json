@@ -1,0 +1,16 @@
+{
+  "name": "ai-usage-bar",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Windows taskbar tracker for Claude Code & Codex usage windows (Tauri v2).",
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "test:core": "cd src-tauri && cargo test -p usage-core",
+    "check:algo": "node tools/algo-check/check.mjs"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}

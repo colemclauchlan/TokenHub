@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<style>
+  html,body{margin:0;background:transparent;overflow:hidden;font-family:-apple-system,'Segoe UI',system-ui,sans-serif;-webkit-font-smoothing:antialiased;user-select:none;cursor:pointer}
+  .bar{display:flex;flex-direction:column;gap:3px;padding:5px 8px;background:rgba(20,23,27,.92);border:1px solid #262b33;border-radius:8px}
+  .row{display:flex;align-items:center;gap:6px}
+  .lbl{width:16px;color:#8b929c;font-size:11px}
+  .seg{display:flex;gap:2px;flex:1}
+  .blk{width:7px;height:9px;border-radius:2px;background:#2a2f37}
+  .blk.on{background:#d0774a}.blk.warn{background:#d9a441}.blk.crit{background:#d85c4a}
+  .meta{font-size:10px;color:#aeb4bd;white-space:nowrap}
+  .meta b{color:#f2f4f7}
+</style>
+</head>
+<body>
+<div class="bar">
+  <div class="row" data-k="fiveHour"><span class="lbl">5h</span><span class="seg"></span><span class="meta"><b class="pct">–</b> · <span class="reset">–</span></span></div>
+  <div class="row" data-k="sevenDay"><span class="lbl">7d</span><span class="seg"></span><span class="meta"><b class="pct">–</b> · <span class="reset">–</span></span></div>
+</div>
+<script>
+  const inv = () => window.__TAURI__?.core?.invoke;
+  document.body.addEventListener("click", () => inv() && window.__TAURI__.core.invoke("toggle_panel"));
+  function segs(el, pct) {
+    const n = 8, f = Math.round(pct / 100 * n), c = pct >= 90 ? "crit" : pct >= 75 ? "warn" : "on";
+    el.innerHTML = "";
+    for (let i = 0; i < n; i++) { const b = document.createElement("span"); b.className = "blk" + (i < f ? " " + c : ""); el.appendChild(b); }
+  }
+  async function tick() {
+    if (!inv()) return;
+    try {
+      const snap = await window.__TAURI__.core.invoke("get_snapshot");
+      const c = snap.claude;
+      for (const k of ["fiveHour", "sevenDay"]) {
+        const row = document.querySelector('.row[data-k="' + k + '"]'), l = c.limits[k];
+        segs(row.querySelector(".seg"), l.pct);
+        row.querySelector(".pct").textContent = l.pct + "%";
+        row.querySelector(".reset").textContent = l.resetLabel;
+      }
+    } catch (e) {}
+  }
+  tick(); setInterval(tick, 5000);
+</script>
+</body>
+</html>

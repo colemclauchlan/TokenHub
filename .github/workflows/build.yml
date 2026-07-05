@@ -1,0 +1,44 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Unit-test the core (all features — window math, parsing, aggregate, provider API)
+        run: cargo test -p usage-core --all-features --manifest-path src-tauri/Cargo.toml
+      - name: Algorithm cross-check
+        run: node tools/algo-check/check.mjs
+
+  build-windows:
+    needs: test-core
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - name: Install CLI
+        run: npm install
+      - name: Build (NSIS + MSI installers)
+        run: npm run build
+      - name: Upload installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-usage-bar-windows
+          path: |
+            src-tauri/target/release/bundle/nsis/*.exe
+            src-tauri/target/release/bundle/msi/*.msi
+          if-no-files-found: warn
