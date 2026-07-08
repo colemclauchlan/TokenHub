@@ -8,8 +8,8 @@ window.MOCK_SNAPSHOT = {
     plan: "Max 5×  $100/mo",
     since: "since Feb 1 ›",
     limits: {
-      fiveHour: { pct: 36, resetLabel: "3h", source: "providerApi" },
-      sevenDay: { pct: 23, resetLabel: "3d", source: "providerApi" },
+      fiveHour: { pct: 36, resetLabel: "3h", resetClock: "7:30pm", source: "providerApi" },
+      sevenDay: { pct: 23, resetLabel: "3d", resetClock: "Jul 9", source: "providerApi" },
     },
     hero: {
       tokens: 2_800_000_000, sessions: 6000, messages: 74200, costUsd: 2100,
@@ -49,8 +49,8 @@ window.MOCK_SNAPSHOT = {
     plan: "Plus  $20/mo",
     since: "since Mar 3 ›",
     limits: {
-      fiveHour: { pct: 12, resetLabel: "4h", source: "providerApi" },
-      sevenDay: { pct: 41, resetLabel: "5d", source: "providerApi" },
+      fiveHour: { pct: 12, resetLabel: "4h", resetClock: "8:15pm", source: "providerApi" },
+      sevenDay: { pct: 41, resetLabel: "5d", resetClock: "Jul 11", source: "providerApi" },
     },
     hero: {
       tokens: 412_000_000, sessions: 820, messages: 9100, costUsd: 190,
@@ -81,4 +81,8 @@ window.MOCK_SNAPSHOT = {
       ],
     },
   },
+
+  // Top-level fields mirrored from the Rust AllSnapshots shape.
+  subscription: { claudeUsd: 100, openaiUsd: 20, totalUsd: 120, usdToCad: 1.38, totalCad: 165.6, currency: "CAD" },
+  pctRemaining: false,
 };

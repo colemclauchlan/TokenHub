@@ -16,7 +16,8 @@ pub fn position_panel(win: &WebviewWindow) {
         let margin = (MARGIN as f64 * scale) as i32;
         let taskbar = (TASKBAR_APPROX as f64 * scale) as i32;
         let ws = win.outer_size().unwrap_or_default();
-        let x = mp.x + ms.width as i32 - ws.width as i32 - margin;
+        // bottom-left, sitting just above the mini-bar / taskbar
+        let x = mp.x + margin;
         let y = mp.y + ms.height as i32 - ws.height as i32 - taskbar - margin;
         let _ = win.set_position(PhysicalPosition::new(x.max(mp.x), y.max(mp.y)));
     }
@@ -35,8 +36,9 @@ pub fn position_minibar(win: &WebviewWindow, corner: &str) {
         let left = mp.x + margin;
         let right = mp.x + ms.width as i32 - w - margin;
         let top = mp.y + margin;
-        // vertically center within the taskbar band at the bottom
-        let bottom = mp.y + ms.height as i32 - h - (taskbar - h).max(0) / 2;
+        // flush just above the taskbar (visible + clickable — embedding a widget
+        // inside the Win11 taskbar breaks cross-process click input)
+        let bottom = mp.y + ms.height as i32 - taskbar - h;
         let (x, y) = match corner {
             "bottomRight" => (right, bottom),
             "topLeft" => (left, top),

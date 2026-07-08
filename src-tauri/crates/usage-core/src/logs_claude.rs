@@ -38,11 +38,23 @@ fn collect_jsonl(root: &Path, out: &mut Vec<PathBuf>) {
 
 /// Parse all Claude Code session logs under `<claude_dir>/projects`.
 pub fn parse_all(claude_dir: &Path) -> Vec<UsageEvent> {
+    parse_trees_since(&[claude_dir.join("projects")], 0)
+}
+
+/// Parse every `*.jsonl` under each root (recursively), deduped by event id.
+/// Files whose modified-time is older than `since_ms` are skipped (0 = no cutoff),
+/// which bounds work when a root holds a long history of large logs (e.g. Cowork).
+pub fn parse_trees_since(roots: &[PathBuf], since_ms: i64) -> Vec<UsageEvent> {
     let mut files = Vec::new();
-    collect_jsonl(&claude_dir.join("projects"), &mut files);
+    for r in roots {
+        collect_jsonl(r, &mut files);
+    }
     let mut events = Vec::new();
     let mut seen: HashSet<String> = HashSet::new();
     for f in files {
+        if since_ms > 0 && file_mtime_ms(&f) < since_ms {
+            continue;
+        }
         let Ok(text) = std::fs::read_to_string(&f) else { continue };
         for line in text.lines() {
             let line = line.trim();
@@ -63,6 +75,15 @@ pub fn parse_all(claude_dir: &Path) -> Vec<UsageEvent> {
     }
     events.sort_by_key(|e| e.ts_ms);
     events
+}
+
+fn file_mtime_ms(p: &Path) -> i64 {
+    std::fs::metadata(p)
+        .and_then(|m| m.modified())
+        .ok()
+        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+        .map(|d| d.as_millis() as i64)
+        .unwrap_or(0)
 }
 
 /// Extract a `UsageEvent` from one parsed JSONL line, tolerating schema drift.

@@ -11,12 +11,12 @@
     "windows": [
       {
         "label": "panel",
-        "title": "AI Usage Bar",
-        "width": 430,
-        "height": 720,
+        "title": "TokenHub",
+        "width": 452,
+        "height": 680,
         "resizable": false,
         "decorations": false,
-        "transparent": true,
+        "transparent": false,
         "alwaysOnTop": true,
         "skipTaskbar": true,
         "visible": false,

@@ -4,43 +4,105 @@
 <meta charset="UTF-8" />
 <style>
   html,body{margin:0;background:transparent;overflow:hidden;font-family:-apple-system,'Segoe UI',system-ui,sans-serif;-webkit-font-smoothing:antialiased;user-select:none;cursor:pointer}
-  .bar{display:flex;flex-direction:column;gap:3px;padding:5px 8px;background:rgba(20,23,27,.92);border:1px solid #262b33;border-radius:8px}
+  body{display:flex;align-items:center;perspective:520px}
+  .bar{--accent:#d0774a;display:inline-flex;flex-direction:row;align-items:center;gap:8px;padding:5px 12px 5px 9px;margin:2px;background:rgba(20,23,27,.94);border:1px solid #262b33;border-radius:9px;transform-style:preserve-3d;backface-visibility:hidden;transform-origin:center center;will-change:transform}
+  .cols{display:flex;flex-direction:column;gap:3px}
+  .sdot{width:9px;height:9px;border-radius:50%;background:#3a3f47;flex:none}
+  .sdot.working{background:#57b26a;box-shadow:0 0 6px rgba(87,178,106,.9)}
+  .sdot.waiting{background:#d9a441;box-shadow:0 0 6px rgba(217,164,65,.8)}
+  .sdot.stopped{background:#d85c4a}
   .row{display:flex;align-items:center;gap:6px}
   .lbl{width:16px;color:#8b929c;font-size:11px}
-  .seg{display:flex;gap:2px;flex:1}
+  .seg{display:flex;gap:2px}
   .blk{width:7px;height:9px;border-radius:2px;background:#2a2f37}
-  .blk.on{background:#d0774a}.blk.warn{background:#d9a441}.blk.crit{background:#d85c4a}
-  .meta{font-size:10px;color:#aeb4bd;white-space:nowrap}
+  .blk.on{background:var(--accent)}.blk.warn{background:#d9a441}.blk.crit{background:#d85c4a}
+  .bar.codex .blk.on,.bar.codex .blk.warn,.bar.codex .blk.crit{background:var(--accent)}
+  .meta{font-size:10px;color:#aeb4bd;white-space:nowrap;margin-left:4px}
   .meta b{color:#f2f4f7}
+  .who{font-size:9px;color:#626873;text-align:right;margin-top:1px;letter-spacing:.3px}
 </style>
 </head>
 <body>
-<div class="bar">
-  <div class="row" data-k="fiveHour"><span class="lbl">5h</span><span class="seg"></span><span class="meta"><b class="pct">–</b> · <span class="reset">–</span></span></div>
-  <div class="row" data-k="sevenDay"><span class="lbl">7d</span><span class="seg"></span><span class="meta"><b class="pct">–</b> · <span class="reset">–</span></span></div>
+<div class="bar" id="bar">
+  <span class="sdot" id="sdot" title=""></span>
+  <div class="cols">
+    <div class="row" data-k="fiveHour"><span class="lbl">5h</span><span class="seg"></span><span class="meta"><b class="pct">–</b> · <span class="reset">–</span></span></div>
+    <div class="row" data-k="sevenDay"><span class="lbl">7d</span><span class="seg"></span><span class="meta"><b class="pct">–</b> · <span class="reset">–</span></span></div>
+    <div class="who" id="who">claude · scroll to switch</div>
+  </div>
 </div>
 <script>
-  const inv = () => window.__TAURI__?.core?.invoke;
-  document.body.addEventListener("click", () => inv() && window.__TAURI__.core.invoke("toggle_panel"));
+  const has = () => !!window.__TAURI__?.core?.invoke;
+  const invoke = (c, a) => window.__TAURI__.core.invoke(c, a);
+  const bar = document.getElementById("bar");
+  const ACCENT = { claude: "#d0774a", codex: "#4aa8c9" };
+  let prov = "claude", showClock = false, snap = null;
+
+  // click toggles (opens / minimizes) the main panel
+  document.body.addEventListener("click", () => has() && invoke("show_panel"));
+  // scroll wheel rotates provider with a 3D prism roll
+  let rolling = false;
+  window.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    rollSwitch(e.deltaY > 0 ? 1 : -1);
+  }, { passive: false });
+  function rollSwitch(dir) {
+    if (rolling) return;
+    rolling = true;
+    const out = dir > 0 ? -90 : 90, inn = dir > 0 ? 90 : -90;
+    bar.style.transition = "transform .15s ease-in";
+    bar.style.transform = `rotateY(${out}deg)`;
+    setTimeout(() => {
+      prov = prov === "claude" ? "codex" : "claude";
+      draw();
+      bar.style.transition = "none";
+      bar.style.transform = `rotateY(${inn}deg)`;
+      requestAnimationFrame(() => {
+        bar.style.transition = "transform .19s ease-out";
+        bar.style.transform = "rotateY(0deg)";
+        setTimeout(() => { rolling = false; }, 210);
+      });
+    }, 150);
+  }
+
   function segs(el, pct) {
     const n = 8, f = Math.round(pct / 100 * n), c = pct >= 90 ? "crit" : pct >= 75 ? "warn" : "on";
     el.innerHTML = "";
     for (let i = 0; i < n; i++) { const b = document.createElement("span"); b.className = "blk" + (i < f ? " " + c : ""); el.appendChild(b); }
   }
-  async function tick() {
-    if (!inv()) return;
-    try {
-      const snap = await window.__TAURI__.core.invoke("get_snapshot");
-      const c = snap.claude;
-      for (const k of ["fiveHour", "sevenDay"]) {
-        const row = document.querySelector('.row[data-k="' + k + '"]'), l = c.limits[k];
-        segs(row.querySelector(".seg"), l.pct);
-        row.querySelector(".pct").textContent = l.pct + "%";
-        row.querySelector(".reset").textContent = l.resetLabel;
-      }
-    } catch (e) {}
+  function draw() {
+    if (!snap) return;
+    const p = snap[prov];
+    bar.style.setProperty("--accent", ACCENT[prov] || "#d0774a");
+    bar.classList.toggle("codex", prov === "codex");
+    document.getElementById("who").textContent = prov + " · scroll to switch";
+    const ind = snap.indicator || {};
+    const sd = document.getElementById("sdot");
+    if (sd) {
+      sd.className = "sdot " + (ind.status && ind.status !== "none" ? ind.status : "");
+      sd.title = ind.chat ? (ind.chat + " — " + ind.status) : "no active chat";
+    }
+    for (const k of ["fiveHour", "sevenDay"]) {
+      const row = bar.querySelector('.row[data-k="' + k + '"]'), l = p.limits[k];
+      segs(row.querySelector(".seg"), l.pct);
+      row.querySelector(".pct").textContent = snap.pctRemaining ? (100 - l.pct) + "%" : l.pct + "%";
+      const r = row.querySelector(".reset");
+      r.dataset.rel = l.resetLabel; r.dataset.clock = l.resetClock || l.resetLabel;
+      r.textContent = showClock ? r.dataset.clock : r.dataset.rel;
+    }
   }
-  tick(); setInterval(tick, 5000);
+  async function tick() {
+    if (!has()) return;
+    try { snap = await invoke("get_snapshot"); draw(); } catch (e) {}
+  }
+  tick();
+  setInterval(tick, 4000);
+  setInterval(() => { showClock = !showClock; draw(); }, 6000);
+  // Prompt updates when the backend pushes a fresh snapshot (settings/profile changes).
+  try {
+    const ev = window.__TAURI__ && window.__TAURI__.event;
+    if (ev && ev.listen) ev.listen("snapshot", (msg) => { if (msg && msg.payload) { snap = msg.payload; draw(); } });
+  } catch (e) {}
 </script>
 </body>
 </html>

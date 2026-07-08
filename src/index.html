@@ -3,31 +3,39 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Usage Bar</title>
+  <title>TokenHub</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div id="panel" class="panel">
     <!-- Top navigation -->
     <header class="topbar">
-      <div class="brand">
-        <span class="term-glyph">&gt;_</span>
-        <span class="brand-name">AI&nbsp;Usage&nbsp;Bar</span>
+      <div class="titlerow">
+        <div class="traffic">
+          <button class="tl tl-close" id="tlClose" title="Close"><span>✕</span></button>
+          <button class="tl tl-min" id="tlMin" title="Minimize"><span>−</span></button>
+          <button class="tl tl-full" id="tlFull" title="Full screen"><span>+</span></button>
+        </div>
+        <div class="brand"><span class="brand-name">TokenHub</span></div>
+        <button class="tab icon-only" data-tab="settings" title="Settings">⚙</button>
       </div>
       <nav class="tabs">
-        <button class="tab" data-tab="processes"><span class="ico">▦</span> Processes</button>
-        <button class="tab is-active" data-tab="usage"><span class="ico">▮▮</span> Usage</button>
-        <button class="tab" data-tab="git"><span class="ico">⑂</span> Git</button>
-        <button class="tab icon-only" data-tab="settings" title="Settings">⚙</button>
-        <button class="tab icon-only" id="closeBtn" title="Close">✕</button>
+        <button class="tab is-active" data-tab="usage">Usage</button>
+        <button class="tab" data-tab="sessions">Sessions</button>
+        <button class="tab" data-tab="history">History</button>
+        <button class="tab" data-tab="processes">Open</button>
+        <button class="tab" data-tab="git">Git</button>
       </nav>
     </header>
 
     <!-- Provider switch (Claude <-> Codex) -->
     <div class="provider-switch">
-      <button class="prov is-active" data-provider="claude">Claude Code</button>
+      <button class="prov is-active" data-provider="overview">Overview</button>
+      <button class="prov" data-provider="claude">Claude</button>
       <button class="prov" data-provider="codex">Codex</button>
     </div>
+
+    <div id="infoBar" class="infobar hidden"></div>
 
     <main id="tab-usage" class="tab-body">
       <!-- Rolling limit windows (5h / 7d) -->
@@ -43,6 +51,23 @@
           <span class="limit-meta"><b class="pct">–</b> · <span class="reset">–</span></span>
         </div>
         <div class="limits-src" id="limitsSrc"></div>
+      </section>
+
+      <!-- Overview only: per-provider quota status + combined subscription cost -->
+      <section class="card ov-status hidden" id="overviewStatus">
+        <div class="ovs-cards">
+          <div class="ovs-card" id="ovsClaude">
+            <span class="ovs-logo">✳</span>
+            <div class="ovs-main"><b>Claude</b><span class="ovs-sub">–</span></div>
+            <span class="ovs-light"></span>
+          </div>
+          <div class="ovs-card" id="ovsCodex">
+            <span class="ovs-logo"></span>
+            <div class="ovs-main"><b>ChatGPT / Codex</b><span class="ovs-sub">–</span></div>
+            <span class="ovs-light"></span>
+          </div>
+        </div>
+        <div class="ovs-cost"><span>Monthly subscriptions</span><b id="ovsCost">–</b></div>
       </section>
 
       <!-- Hero: provider summary -->
@@ -87,12 +112,22 @@
         <canvas id="sparkline" height="90"></canvas>
       </section>
 
+      <!-- Models breakdown (share of usage this period) -->
+      <section class="card models">
+        <div class="card-head">
+          <span class="card-title">Models <span class="muted">· share of period</span></span>
+          <span class="card-right" id="modelsTotal">–</span>
+        </div>
+        <div class="stack" id="modelsStack"></div>
+        <div id="modelList" class="model-list"></div>
+      </section>
+
       <!-- 14-day trend combo chart -->
       <section class="card trend">
         <div class="card-head">
           <span class="card-title">14-Day Trend <span class="muted">▾</span></span>
           <span class="legend-inline">
-            <i class="dot orange"></i> msgs&nbsp;&nbsp;<i class="dash blue"></i> tokens
+            <i id="dotMsgs" class="dot"></i> msgs&nbsp;&nbsp;<i id="dashTokens" class="dash"></i> tokens
           </span>
         </div>
         <canvas id="trend" height="150"></canvas>
@@ -103,21 +138,31 @@
         </div>
       </section>
 
-      <!-- Models breakdown -->
-      <section class="card models">
-        <div class="card-head">
-          <span class="card-title">Models</span>
-          <span class="card-right" id="modelsTotal">–</span>
+      <!-- Joke: "water guilt" meter (opt-in) -->
+      <section class="card jokebox hidden" id="jokeBox">
+        <div class="joke-drop">💧</div>
+        <div class="joke-main">
+          <div class="joke-title">Water Guilt Meter</div>
+          <div id="jokeText" class="joke-text">–</div>
+          <div id="jokeSub" class="joke-sub muted">–</div>
         </div>
-        <div class="stack" id="modelsStack"></div>
-        <div id="modelList" class="model-list"></div>
       </section>
+    </main>
+
+    <!-- Sessions -->
+    <main id="tab-sessions" class="tab-body hidden">
+      <div id="sessionList"></div>
+    </main>
+
+    <!-- History / Projects -->
+    <main id="tab-history" class="tab-body hidden">
+      <div id="historyList"></div>
     </main>
 
     <!-- Processes -->
     <main id="tab-processes" class="tab-body hidden">
       <div id="procList"></div>
-      <section class="card hidden" id="procEmpty"><div class="placeholder">No AI processes detected right now.</div></section>
+      <section class="card hidden" id="procEmpty"><div class="placeholder">No AI windows open right now.</div></section>
     </main>
 
     <!-- Git -->

@@ -25,6 +25,7 @@ pub struct Breakdown {
 pub struct LimitWin {
     pub pct: u32,
     pub reset_label: String,
+    pub reset_clock: String,
     pub source: String,
 }
 
@@ -107,9 +108,37 @@ pub struct ProviderSnapshot {
 }
 
 #[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct Subscription {
+    pub claude_usd: f64,
+    pub openai_usd: f64,
+    pub total_usd: f64,
+    pub usd_to_cad: f64,
+    pub total_cad: f64,
+    pub currency: String,
+}
+
+/// Agent-status indicator for the widget: the chosen chat's live state.
+#[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct Indicator {
+    /// "working" (green) | "waiting" (yellow) | "stopped" (red) | "none".
+    pub status: String,
+    pub chat: String,
+    pub model: String,
+    pub id: String,
+}
+
+#[derive(Serialize, Clone)]
 pub struct AllSnapshots {
     pub claude: ProviderSnapshot,
     pub codex: ProviderSnapshot,
+    pub subscription: Subscription,
+    #[serde(rename = "pctRemaining")]
+    pub pct_remaining: bool,
+    pub indicator: Indicator,
+    #[serde(rename = "jokeMode")]
+    pub joke_mode: bool,
 }
 
 fn fc(n: u64) -> String {
@@ -170,10 +199,63 @@ fn breakdown(tb: usage_core::model::TokenBreakdown) -> Breakdown {
     }
 }
 
-fn build_limit(w: &usage_core::model::WindowStat) -> LimitWin {
+const WEEK_MS: i64 = 7 * 24 * 60 * 60 * 1000;
+
+fn fmt_countdown(ms: i64) -> String {
+    let s = (ms / 1000).max(0);
+    let d = s / 86_400;
+    let h = (s % 86_400) / 3_600;
+    let m = (s % 3_600) / 60;
+    if d > 0 {
+        format!("{}d {}h", d, h)
+    } else if h > 0 {
+        format!("{}h {}m", h, m)
+    } else {
+        format!("{}m", m)
+    }
+}
+
+fn fmt_clock(end_ms: i64) -> String {
+    match Local.timestamp_millis_opt(end_ms).single() {
+        Some(dt) => {
+            let h24 = dt.hour();
+            let m = dt.minute();
+            let ampm = if h24 < 12 { "am" } else { "pm" };
+            let h12 = match h24 % 12 {
+                0 => 12,
+                x => x,
+            };
+            format!("{}:{:02}{}", h12, m, ampm)
+        }
+        None => String::new(),
+    }
+}
+
+/// A stable weekly reset anchored at first-ever use (used only in estimate mode
+/// when the provider API hasn't given a real reset), so the 7-day countdown works.
+fn rolling_weekly_reset(events: &[UsageEvent], now: i64) -> i64 {
+    let first = events.iter().map(|e| e.ts_ms).min().unwrap_or(now);
+    if first >= now {
+        return now + WEEK_MS;
+    }
+    let k = (now - first) / WEEK_MS + 1;
+    first + k * WEEK_MS
+}
+
+fn fmt_date(end_ms: i64) -> String {
+    match Local.timestamp_millis_opt(end_ms).single() {
+        Some(dt) => format!("{} {}", month_abbr(dt.month()), dt.day()),
+        None => String::new(),
+    }
+}
+
+/// `weekly` chooses the alternate readout: a date ("Jul 16") for the 7-day window,
+/// a clock time ("7:30pm") for the 5-hour window.
+fn build_limit(w: &usage_core::model::WindowStat, weekly: bool) -> LimitWin {
     LimitWin {
         pct: w.percent().unwrap_or(0.0).round() as u32,
-        reset_label: w.remaining_label(),
+        reset_label: fmt_countdown(w.remaining_ms()),
+        reset_clock: if weekly { fmt_date(w.end_ms) } else { fmt_clock(w.end_ms) },
         source: match w.source {
             WindowSource::ProviderApi => "providerApi".into(),
             WindowSource::Estimate => "estimate".into(),
@@ -223,8 +305,9 @@ fn build_provider(
 
     // limits (estimate first, then provider-API override if enabled)
     let mut five = windows_calc::with_budget(windows_calc::active_5h(events, now), budgets.0);
+    let wr = weekly_reset.or_else(|| Some(rolling_weekly_reset(events, now)));
     let mut seven =
-        windows_calc::with_budget(windows_calc::window_7d(events, now, weekly_reset), budgets.1);
+        windows_calc::with_budget(windows_calc::window_7d(events, now, wr), budgets.1);
     if settings.use_provider_api {
         if let Some(q) = provider::fetch_quota(provider) {
             if let Some(w) = q.five_hour {
@@ -250,7 +333,8 @@ fn build_provider(
         })
         .collect();
     let trend_pills = TrendPills {
-        avg_per_day: format!("💬 {} msgs/day", fc(total_msgs / 14)),
+        // Plain text — the frontend adds the 💬 icon (avoids doubling it up).
+        avg_per_day: format!("{} msgs/day", fc(total_msgs / 14)),
         total_msgs: format!("Σ {} total msgs", fc(total_msgs)),
         total_tokens: format!("# {} tokens", fc(total_tokens)),
     };
@@ -294,8 +378,8 @@ fn build_provider(
         plan: plan.into(),
         since,
         limits: Limits {
-            five_hour: build_limit(&five),
-            seven_day: build_limit(&seven),
+            five_hour: build_limit(&five, false),
+            seven_day: build_limit(&seven, true),
         },
         hero,
         today,
@@ -313,13 +397,73 @@ fn month_abbr(m: u32) -> &'static str {
         .unwrap_or("")
 }
 
+/// Roots that hold Claude usage logs: the CLI's `~/.claude/projects` plus the
+/// Cowork desktop app's per-session dirs under app-data.
+pub fn claude_log_roots() -> Vec<std::path::PathBuf> {
+    let mut roots = Vec::new();
+    if let Some(d) = usage_core::logs_claude::claude_dir() {
+        roots.push(d.join("projects"));
+    }
+    for key in ["APPDATA", "LOCALAPPDATA"] {
+        if let Some(base) = std::env::var_os(key) {
+            roots.push(std::path::PathBuf::from(base).join("Claude").join("local-agent-mode-sessions"));
+        }
+    }
+    roots
+}
+
+/// Files older than this are skipped when parsing (keeps the 5h/7d/14d windows
+/// exact while bounding work over a large Cowork history). ~45 days back.
+fn recent_cutoff_ms() -> i64 {
+    chrono::Utc::now().timestamp_millis() - 45 * 24 * 3600 * 1000
+}
+
 pub fn build_all(settings: &Settings) -> AllSnapshots {
-    let claude_events = usage_core::logs_claude::claude_dir()
-        .map(|d| usage_core::logs_claude::parse_all(&d))
-        .unwrap_or_default();
+    // Claude usage comes from BOTH the CLI (~/.claude/projects) and the Cowork
+    // desktop app (%APPDATA%/%LOCALAPPDATA%\Claude\local-agent-mode-sessions).
+    let claude_events = usage_core::logs_claude::parse_trees_since(&claude_log_roots(), recent_cutoff_ms());
     let codex_events = usage_core::logs_codex::codex_dir()
         .map(|d| usage_core::logs_codex::parse_all(&d))
         .unwrap_or_default();
+
+    // Combined monthly subscription cost (only count services being tracked).
+    let claude_usd = if settings.track_claude { settings.claude_plan_usd } else { 0.0 };
+    let openai_usd = if settings.track_codex { settings.openai_plan_usd } else { 0.0 };
+    let total_usd = claude_usd + openai_usd;
+    let rate = if settings.usd_to_cad > 0.0 { settings.usd_to_cad } else { 1.38 };
+    let subscription = Subscription {
+        claude_usd,
+        openai_usd,
+        total_usd,
+        usd_to_cad: rate,
+        total_cad: (total_usd * rate * 100.0).round() / 100.0,
+        currency: "CAD".into(),
+    };
+
+    // Widget agent-status indicator: the chosen chat, else the most-recent one.
+    let sessions = crate::sessions::all_sessions();
+    let sel = if settings.indicator_session_id.is_empty() {
+        sessions.first()
+    } else {
+        sessions
+            .iter()
+            .find(|s| s.id == settings.indicator_session_id)
+            .or_else(|| sessions.first())
+    };
+    let indicator = match sel {
+        Some(s) => Indicator {
+            status: crate::sessions::agent_status(s.last_ms).to_string(),
+            chat: s.name.clone(),
+            model: s.model.clone(),
+            id: s.id.clone(),
+        },
+        None => Indicator {
+            status: "none".into(),
+            chat: String::new(),
+            model: String::new(),
+            id: String::new(),
+        },
+    };
 
     AllSnapshots {
         claude: build_provider(
@@ -336,5 +480,9 @@ pub fn build_all(settings: &Settings) -> AllSnapshots {
             (settings.codex_5h_budget, settings.codex_7d_budget),
             settings.codex_weekly_reset_ms,
         ),
+        subscription,
+        pct_remaining: settings.pct_remaining,
+        indicator,
+        joke_mode: settings.joke_mode,
     }
 }
