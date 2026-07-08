@@ -1,10 +1,9 @@
 # TokenHub
 
-A Windows **taskbar tracker for Claude Code, Claude Cowork, and OpenAI Codex/ChatGPT** — inspired
-by [TermTracker](https://github.com/isaacaudet/TermTracker) (macOS). It lives in the tray with a
-dynamic icon and a docked mini-bar, and clicks open a full panel. It tracks your **5-hour** and
-**7-day** rolling limit windows, token usage, cost estimates, per-model share, live agent status,
-and your local git repos.
+A Windows **taskbar tracker for Claude Code, Claude Cowork, and OpenAI Codex/ChatGPT** 
+It lives in the tray with a dynamic icon and a docked mini-bar, and clicks open a full panel. 
+It tracks your **5-hour** and **7-day** rolling limit windows, token usage, cost estimates, 
+per-model share, live agent status, and your local git repos.
 
 Built with **Tauri v2** (Rust core + web UI). See `PLAN.md` for the full design + critique.
 
