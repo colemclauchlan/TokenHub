@@ -2,7 +2,7 @@
 name = "usage-core"
 version = "0.1.0"
 edition = "2021"
-description = "Core log-parsing, rolling-window, and pricing logic for AI Usage Bar (Windows port of TermTracker)."
+description = "Core log-parsing, rolling-window, and pricing logic for TokenHub."
 license = "MIT"
 
 # The pure math (model, windows_calc, pricing) has ZERO external deps so it can be

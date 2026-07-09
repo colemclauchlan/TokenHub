@@ -1,19 +1,18 @@
-# AI Usage Taskbar — Build Plan (Windows port of TermTracker)
+# TokenHub — Build Plan
 
 Status: **DRAFT for approval** · Last updated: 2026-07-05
 
-Mirror of [isaacaudet/TermTracker](https://github.com/isaacaudet/TermTracker) (native macOS
-menu-bar app, SwiftUI) rebuilt for **Windows**, living in the taskbar/tray with an
-expandable panel. Tracks token usage + rolling limit windows for **Claude Code** and
-**OpenAI Codex CLI**, with a swappable Claude ⇄ Codex view.
+A native **Windows** taskbar/tray app with an expandable panel. Tracks token usage +
+rolling limit windows for **Claude Code**, **Claude Cowork**, and **OpenAI Codex CLI**,
+with a swappable Claude ⇄ Codex view.
 
 ---
 
 ## 1. Answers to your two questions (these drive the design)
 
 ### Q1 — "Will the 5h / 7d calculation match the circle counter inside Claude Code?"
-**Yes — if we read the same source Claude Code reads, not just local logs.** TermTracker's
-own README is explicit about this:
+**Yes — if we read the same source Claude Code reads, not just local logs.** The key
+distinction:
 
 > Claude/Codex **quota windows** (optional) → **Provider usage APIs via local OAuth credentials**
 
@@ -43,7 +42,7 @@ weather text.** Facts:
   must be **Adaptive Cards** (JSON: text/images/actions) rendered **inside Microsoft's Widgets
   board** — you do **not** get arbitrary HTML/canvas, and you **cannot** replace just the weather
   label on the taskbar in a supported way.
-- So the rich TermTracker-style panel **cannot** live inside the official Widgets board at full
+- So the rich panel **cannot** live inside the official Widgets board at full
   fidelity.
 
 **What we'll do instead (gets the same result):**
@@ -79,7 +78,7 @@ webview, excellent tray support) but it's slower to match the exact glass stylin
 
 ## 3. Feature / tab parity map
 
-| TermTracker (macOS) | Windows port | Primary data source (Windows paths) |
+| Feature | TokenHub (Windows) | Primary data source (Windows paths) |
 |---|---|---|
 | Menu-bar glyph w/ mini bars | **Tray icon (dynamic) + docked mini-bar** | computed 5h/7d values |
 | **Usage** tab (hero card, Today, Last-Hour sparkline, 14-day trend, Models) | Same, swappable **Claude ⇄ Codex** | `%USERPROFILE%\.claude\projects\**\*.jsonl`, `.claude\stats-cache.json`; Codex `%USERPROFILE%\.codex\sessions\**\rollout-*.jsonl` |
@@ -163,7 +162,7 @@ spend," matching the reference. Table lives in one file for easy updates.
 
 ## 10. SELF-CRITIQUE — holes in this plan & mitigations
 1. **Exact counter match is the riskiest claim.** The provider usage endpoint shape/auth isn't
-   publicly documented and can change; TermTracker guards it behind env overrides for a reason.
+   publicly documented and can change; it's worth guarding behind env overrides for a reason.
    → *Mitigation:* isolate it behind a trait with the endpoint/host configurable (same env-override
    pattern), ship the local-log estimate as guaranteed-working fallback, and label which is live.
 2. **Reading the OAuth token = handling a credential.** → *Mitigation:* opt-in first-run consent,

@@ -18,7 +18,7 @@ gh auth status *> $null; if ($LASTEXITCODE -ne 0) { throw "Run 'gh auth login' f
 if (Test-Path .git) { Remove-Item -Recurse -Force .git }
 git init -b main | Out-Null
 git add -A
-git commit -m "AI Usage Bar v0.1.0 - Windows port of TermTracker (Tauri v2)" | Out-Null
+git commit -m "TokenHub v0.1.0 (Tauri v2)" | Out-Null
 Write-Host "Committed $(git rev-list --count HEAD) revision(s)."
 
 # Create the private repo and push

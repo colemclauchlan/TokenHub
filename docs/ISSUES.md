@@ -55,7 +55,7 @@ tolerant parser + env overrides (`usage_api.rs`); it must be verified against th
 
 **Summary.** Parse `tool_use` blocks to populate the Today `tools` count (currently `0`, a known
 stub), extract session name / git branch / working dir from Claude Code JSONL, mark active sessions
-with a green dot, and add a day timeline — matching TermTracker's "Session Intelligence".
+with a green dot, and add a day timeline — full session intelligence.
 
 **Acceptance criteria**
 - [ ] `today.tools` reflects real tool-call counts for the day.
