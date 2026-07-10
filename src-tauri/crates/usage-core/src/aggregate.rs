@@ -111,9 +111,9 @@ mod tests {
     fn sparkline_bins_last_hour() {
         let now = 2_000_000_000_000;
         let events = vec![
-            ev(now - 59 * MIN, "s", 100, 0), // bin 0
-            ev(now - 1 * MIN, "s", 200, 0),  // last bin
-            ev(now - 2 * HOUR, "s", 999, 0), // outside window
+            ev(now - 60 * MIN, "s", 100, 0), // window start -> bin 0
+            ev(now - 1 * MIN, "s", 200, 0),  // most recent -> last bin (59)
+            ev(now - 2 * HOUR, "s", 999, 0), // outside the 1h window -> ignored
         ];
         let bins = sparkline_last_hour(&events, now, 60);
         assert_eq!(bins.len(), 60);
