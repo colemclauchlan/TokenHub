@@ -3,40 +3,41 @@
 <head>
 <meta charset="UTF-8" />
 <style>
-  html,body{margin:0;background:transparent;overflow:hidden;font-family:-apple-system,'Segoe UI',system-ui,sans-serif;-webkit-font-smoothing:antialiased;user-select:none;cursor:pointer}
+  html,body{margin:0;background:transparent;overflow:hidden;font-family:'Cascadia Mono',Consolas,'SF Mono',monospace;-webkit-font-smoothing:antialiased;user-select:none;cursor:pointer}
   body{display:flex;align-items:center;perspective:520px}
-  .bar{--accent:#d0774a;display:inline-flex;flex-direction:row;align-items:center;gap:8px;padding:5px 12px 5px 9px;margin:2px;background:rgba(20,23,27,.94);border:1px solid #262b33;border-radius:9px;transform-style:preserve-3d;backface-visibility:hidden;transform-origin:center center;will-change:transform}
-  .cols{display:flex;flex-direction:column;gap:3px}
-  .sdot{width:9px;height:9px;border-radius:50%;background:#3a3f47;flex:none}
-  .sdot.working{background:#57b26a;box-shadow:0 0 6px rgba(87,178,106,.9)}
-  .sdot.waiting{background:#d9a441;box-shadow:0 0 6px rgba(217,164,65,.8)}
-  .sdot.stopped{background:#d85c4a}
+  .bar{--accent:#e0824f;display:inline-flex;flex-direction:row;align-items:center;gap:11px;padding:6px 13px 6px 11px;margin:1px;background:rgba(16,20,25,.96);border:1px solid #272d36;border-radius:11px;transform-style:preserve-3d;backface-visibility:hidden;transform-origin:center center;will-change:transform}
+  .led{width:15px;height:15px;border-radius:50%;border:2px solid #343a43;box-sizing:border-box;display:flex;align-items:center;justify-content:center;flex:none}
+  .led i{width:7px;height:7px;border-radius:50%;background:#3a3f47}
+  .led.working{border-color:rgba(87,210,115,.55)}.led.working i{background:#57d273;box-shadow:0 0 6px rgba(87,210,115,.9)}
+  .led.waiting{border-color:rgba(217,164,65,.55)}.led.waiting i{background:#d9a441;box-shadow:0 0 6px rgba(217,164,65,.8)}
+  .led.stopped{border-color:rgba(216,92,74,.55)}.led.stopped i{background:#d85c4a}
+  .who{font-size:11px;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;flex:none}
+  .cols{display:flex;flex-direction:column;gap:4px}
   .row{display:flex;align-items:center;gap:6px}
-  .lbl{width:16px;color:#8b929c;font-size:11px}
+  .lbl{width:15px;color:#79818c;font-size:9px;font-weight:700;letter-spacing:.5px;flex:none}
   .seg{display:flex;gap:2px}
-  .blk{width:7px;height:9px;border-radius:2px;background:#2a2f37}
+  .blk{width:4px;height:10px;border-radius:1.5px;background:#272c34}
   .blk.on{background:var(--accent)}.blk.warn{background:#d9a441}.blk.crit{background:#d85c4a}
-  .bar.codex .blk.on,.bar.codex .blk.warn,.bar.codex .blk.crit{background:var(--accent)}
-  .meta{font-size:10px;color:#aeb4bd;white-space:nowrap;margin-left:4px}
-  .meta b{color:#f2f4f7}
-  .who{font-size:9px;color:#626873;text-align:right;margin-top:1px;letter-spacing:.3px}
+  .pct{width:34px;text-align:right;font-size:12px;font-weight:700;color:#f2f4f7;flex:none}
+  .meta{font-size:10px;color:#98a0ab;white-space:nowrap}
 </style>
 </head>
 <body>
-<div class="bar" id="bar">
-  <span class="sdot" id="sdot" title=""></span>
+<div class="bar" id="bar" title="scroll — flip provider · click — open panel">
+  <span class="led" id="led" title=""><i></i></span>
+  <span class="who" id="who">Claude</span>
   <div class="cols">
-    <div class="row" data-k="fiveHour"><span class="lbl">5h</span><span class="seg"></span><span class="meta"><b class="pct">–</b> · <span class="reset">–</span></span></div>
-    <div class="row" data-k="sevenDay"><span class="lbl">7d</span><span class="seg"></span><span class="meta"><b class="pct">–</b> · <span class="reset">–</span></span></div>
-    <div class="who" id="who">claude · scroll to switch</div>
+    <div class="row" data-k="fiveHour"><span class="lbl">5H</span><span class="seg"></span><span class="pct">–</span><span class="meta">–</span></div>
+    <div class="row" data-k="sevenDay"><span class="lbl">7D</span><span class="seg"></span><span class="pct">–</span><span class="meta">–</span></div>
   </div>
 </div>
 <script>
   const has = () => !!window.__TAURI__?.core?.invoke;
   const invoke = (c, a) => window.__TAURI__.core.invoke(c, a);
   const bar = document.getElementById("bar");
-  const ACCENT = { claude: "#d0774a", codex: "#4aa8c9" };
-  let prov = "claude", showClock = false, snap = null;
+  const ACCENT = { claude: "#e0824f", codex: "#4aa8c9" };
+  const DAY = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  let prov = "claude", snap = null;
 
   // click toggles (opens / minimizes) the main panel
   document.body.addEventListener("click", () => has() && invoke("show_panel"));
@@ -65,32 +66,41 @@
     }, 150);
   }
 
-  function segs(el, pct) {
-    const n = 8, f = Math.round(pct / 100 * n), c = pct >= 90 ? "crit" : pct >= 75 ? "warn" : "on";
+  function segs(el, shownPct, usedPct) {
+    const n = 16, f = Math.round(shownPct / 100 * n), c = usedPct >= 90 ? "crit" : usedPct >= 75 ? "warn" : "on";
     el.innerHTML = "";
     for (let i = 0; i < n; i++) { const b = document.createElement("span"); b.className = "blk" + (i < f ? " " + c : ""); el.appendChild(b); }
+  }
+  // Live H:MM:SS countdown to the 5h reset, ticking every second.
+  function countdown(endMs) {
+    let s = Math.max(0, Math.floor((endMs - Date.now()) / 1000));
+    const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), ss = s % 60;
+    return h + ":" + String(m).padStart(2, "0") + ":" + String(ss).padStart(2, "0");
+  }
+  // The 7d reset lands on a day, not within hours — show "→ Thu 09:00".
+  function resetDay(endMs) {
+    const d = new Date(endMs);
+    return "→ " + DAY[d.getDay()] + " " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
   }
   function draw() {
     if (!snap) return;
     const p = snap[prov];
-    bar.style.setProperty("--accent", ACCENT[prov] || "#d0774a");
-    bar.classList.toggle("codex", prov === "codex");
-    document.getElementById("who").textContent = prov + " · scroll to switch";
+    bar.style.setProperty("--accent", ACCENT[prov] || "#e0824f");
+    document.getElementById("who").textContent = prov;
     // Per-provider light: only a Claude chat lights the Claude tracker,
     // only a Codex chat lights the Codex tracker.
     const ind = (snap.indicators && snap.indicators[prov]) || {};
-    const sd = document.getElementById("sdot");
-    if (sd) {
-      sd.className = "sdot " + (ind.status && ind.status !== "none" ? ind.status : "");
-      sd.title = ind.chat ? (ind.chat + " — " + ind.status) : "no active " + prov + " chat";
-    }
+    const led = document.getElementById("led");
+    led.className = "led " + (ind.status && ind.status !== "none" ? ind.status : "");
+    led.title = ind.chat ? (ind.chat + " — " + ind.status) : "no active " + prov + " chat";
     for (const k of ["fiveHour", "sevenDay"]) {
       const row = bar.querySelector('.row[data-k="' + k + '"]'), l = p.limits[k];
-      segs(row.querySelector(".seg"), l.pct);
-      row.querySelector(".pct").textContent = snap.pctRemaining ? (100 - l.pct) + "%" : l.pct + "%";
-      const r = row.querySelector(".reset");
-      r.dataset.rel = l.resetLabel; r.dataset.clock = l.resetClock || l.resetLabel;
-      r.textContent = showClock ? r.dataset.clock : r.dataset.rel;
+      const shown = snap.pctRemaining ? 100 - l.pct : l.pct;
+      segs(row.querySelector(".seg"), shown, l.pct);
+      row.querySelector(".pct").textContent = shown + "%";
+      row.querySelector(".meta").textContent = l.endMs
+        ? (k === "fiveHour" ? countdown(l.endMs) : resetDay(l.endMs))
+        : (k === "fiveHour" ? l.resetLabel : l.resetClock);
     }
   }
   async function tick() {
@@ -99,7 +109,7 @@
   }
   tick();
   setInterval(tick, 4000);
-  setInterval(() => { showClock = !showClock; draw(); }, 6000);
+  setInterval(draw, 1000); // keep the seconds countdown live between snapshots
   // Prompt updates when the backend pushes a fresh snapshot (settings/profile changes).
   try {
     const ev = window.__TAURI__ && window.__TAURI__.event;

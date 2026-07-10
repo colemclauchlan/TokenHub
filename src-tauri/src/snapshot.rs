@@ -26,6 +26,8 @@ pub struct LimitWin {
     pub pct: u32,
     pub reset_label: String,
     pub reset_clock: String,
+    /// Raw reset instant so the widget can render a live countdown.
+    pub end_ms: i64,
     pub source: String,
 }
 
@@ -264,6 +266,7 @@ fn build_limit(w: &usage_core::model::WindowStat, weekly: bool) -> LimitWin {
         pct: w.percent().unwrap_or(0.0).round() as u32,
         reset_label: fmt_countdown(w.remaining_ms()),
         reset_clock: if weekly { fmt_date(w.end_ms) } else { fmt_clock(w.end_ms) },
+        end_ms: w.end_ms,
         source: match w.source {
             WindowSource::ProviderApi => "providerApi".into(),
             WindowSource::Estimate => "estimate".into(),

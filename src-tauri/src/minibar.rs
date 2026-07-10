@@ -6,7 +6,7 @@ use tauri::{WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 pub fn create(app: &tauri::AppHandle, corner: &str) -> tauri::Result<WebviewWindow> {
     let win = WebviewWindowBuilder::new(app, "minibar", WebviewUrl::App("minibar.html".into()))
         .title("TokenHub Mini")
-        .inner_size(200.0, 46.0)
+        .inner_size(342.0, 48.0)
         .decorations(false)
         .transparent(true)
         .always_on_top(true)
