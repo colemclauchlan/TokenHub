@@ -559,20 +559,27 @@ async function loadSessions() {
   if (!hasTauri()) { list.innerHTML = '<section class="card"><div class="placeholder">Sessions are available in the installed app.</div></section>'; return; }
   try {
     const all = await fetchSessions("overview");
-    const THIRTY_M = 30 * 60 * 1000;
-    const sess = all.filter((s) => Date.now() - s.lastMs < THIRTY_M);
+    const TEN_M = 10 * 60 * 1000; // chats idle longer than this drop off the tab
+    const sess = all.filter((s) => Date.now() - s.lastMs < TEN_M);
     const projName = (cwd) => { const b = basenameJs(cwd); return ALIASES.projects[b] || b; };
     const chatName = (s) => ALIASES.sessions[s.id] || s.name || projName(s.cwd) || "chat";
+    // Card title: "REPO - one-sentence summary" (just "REPO" if that's all we have).
+    const cardName = (s) => {
+      const nm = chatName(s);
+      const repo = basenameJs(s.cwd);
+      if (!repo) return nm;
+      return nm.toLowerCase() === repo.toLowerCase() ? repo.toUpperCase() : repo.toUpperCase() + " - " + nm;
+    };
     const statline = (s) => {
       const pct = s.contextTokens ? Math.min(100, Math.round(s.contextTokens / 200000 * 100)) : 0;
       const ctx = s.contextTokens ? `${fmtCompact(s.contextTokens)}/200k <span class="muted">${pct}%</span>` : "";
       const live = Date.now() - s.lastMs < 120000; // working within the last 2 min
       const proj = projName(s.cwd);
       return `
-      <section class="card statline" data-id="${escapeHtml(s.id)}" data-cwd="${escapeHtml(s.cwd)}" data-provider="${providerOf(s)}" title="Click to open its window">
+      <section class="card statline" data-id="${escapeHtml(s.id)}" data-cwd="${escapeHtml(s.cwd)}" data-name="${escapeHtml(chatName(s))}" data-provider="${providerOf(s)}" title="Click to open its window">
         <div class="sl-top">
           <span class="sl-dot ${live ? "working" : "off"}" title="${live ? "Working" : "Idle"}"></span>
-          <span class="sl-name">${escapeHtml(chatName(s))}</span>
+          <span class="sl-name">${escapeHtml(cardName(s))}</span>
           <button class="ren sl-ren" data-id="${escapeHtml(s.id)}" title="Rename chat">✎</button>
           <span class="sl-ago">${fmtAgo(s.lastMs)}</span>
           <button class="sl-exp" title="Agents">▸</button>
@@ -591,7 +598,7 @@ async function loadSessions() {
     };
     let html = "";
     if (!sess.length) {
-      html = `<section class="card"><div class="placeholder">No chats with agents active in the last 30 minutes.<br><span class="muted">Start a Claude Code / Codex chat, or see History for older sessions.</span></div></section>`;
+      html = `<section class="card"><div class="placeholder">No chats with agents active in the last 10 minutes.<br><span class="muted">Start a Claude Code / Codex chat, or see History for older sessions.</span></div></section>`;
     } else {
       const groups = {};
       for (const s of sess) { const c = s.client || "Other"; (groups[c] = groups[c] || []).push(s); }
@@ -628,7 +635,8 @@ async function loadSessions() {
       if (ren) ren.addEventListener("click", (e) => {
         e.stopPropagation();
         const label = r.querySelector(".sl-name"), id = ren.dataset.id;
-        inlineRename(label, ALIASES.sessions[id] || label.textContent, (nv) => {
+        // Seed the editor with the bare chat name, not the "REPO - " display title.
+        inlineRename(label, ALIASES.sessions[id] || r.dataset.name || label.textContent, (nv) => {
           if (nv !== null) { if (nv) ALIASES.sessions[id] = nv; else delete ALIASES.sessions[id]; invoke("set_session_alias", { id, name: nv || "" }); }
           loadSessions();
         });

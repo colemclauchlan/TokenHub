@@ -116,6 +116,45 @@ fn clip(s: &str, max_chars: usize) -> String {
     out
 }
 
+/// Reduce text to at most one sentence (first line, cut at the first sentence
+/// end, capped at ~70 chars on a word boundary) — the chat-card display name.
+fn one_sentence(s: &str) -> String {
+    let line = s.lines().find(|l| !l.trim().is_empty()).map(|l| l.trim()).unwrap_or("");
+    let chars: Vec<char> = line.chars().collect();
+    let mut end = chars.len();
+    for i in 0..chars.len() {
+        if matches!(chars[i], '.' | '!' | '?')
+            && (i + 1 == chars.len() || chars[i + 1].is_whitespace())
+        {
+            end = i + 1;
+            break;
+        }
+    }
+    let sent: String = chars[..end].iter().collect();
+    let sent = sent.trim_end_matches(['.', ':']).trim();
+    let mut out = String::new();
+    for w in sent.split_whitespace() {
+        if !out.is_empty() && out.chars().count() + w.chars().count() + 1 > 70 {
+            out.push('…');
+            break;
+        }
+        if !out.is_empty() {
+            out.push(' ');
+        }
+        out.push_str(w);
+    }
+    out
+}
+
+/// Drop later duplicates of the same chat (same project dir + same name),
+/// e.g. continuation/resume files of one conversation. Input must be sorted
+/// most-recent first, so the newest copy is the one kept.
+fn dedupe(mut v: Vec<SessionInfo>) -> Vec<SessionInfo> {
+    let mut seen = std::collections::HashSet::new();
+    v.retain(|s| seen.insert((s.cwd.to_ascii_lowercase(), s.name.to_ascii_lowercase())));
+    v
+}
+
 fn find_claude_file(id: &str) -> Option<std::path::PathBuf> {
     let mut files = Vec::new();
     if let Some(d) = usage_core::logs_claude::claude_dir() {
@@ -318,8 +357,14 @@ pub fn claude_sessions() -> Vec<SessionInfo> {
     // Parse only the newest files (by mtime) so a large log history stays fast.
     files.sort_by_key(|p| std::cmp::Reverse(mtime_ms(p)));
     files.truncate(60);
-    let mut out: Vec<SessionInfo> = files.iter().filter_map(|p| parse_claude_session(p)).collect();
+    let mut out: Vec<SessionInfo> = files
+        .iter()
+        .filter_map(|p| parse_claude_session(p))
+        // Workflow/sub-agent transcripts aren't chats — don't list them.
+        .filter(|s| !s.id.starts_with("wf_") && !s.id.starts_with("agent-"))
+        .collect();
     out.sort_by_key(|s| std::cmp::Reverse(s.last_ms));
+    let mut out = dedupe(out);
     out.truncate(30);
     out
 }
@@ -391,13 +436,15 @@ fn parse_claude_session(path: &Path) -> Option<SessionInfo> {
             }
         }
         if name.is_empty() {
+            // Prefer the log's own conversation summary; else the first real
+            // user ask. Either way condense to one sentence for the card name.
             if let Some(s) = v.get("summary").and_then(|x| x.as_str()) {
-                name = s.to_string();
+                name = one_sentence(s);
             } else if v.get("type").and_then(|x| x.as_str()) == Some("user") {
                 if let Some(t) = v.pointer("/message/content").and_then(first_text) {
                     let t = t.trim();
-                    if !t.is_empty() {
-                        name = t.chars().take(64).collect();
+                    if !t.is_empty() && !t.starts_with('<') && !t.starts_with("Caveat:") {
+                        name = one_sentence(t);
                     }
                 }
             }
@@ -483,6 +530,7 @@ pub fn codex_sessions() -> Vec<SessionInfo> {
     collect_codex(&dir.join("sessions"), &mut files);
     let mut out: Vec<SessionInfo> = files.iter().filter_map(|p| parse_codex_session(p)).collect();
     out.sort_by_key(|s| std::cmp::Reverse(s.last_ms));
+    let mut out = dedupe(out);
     out.truncate(30);
     out
 }
@@ -531,8 +579,8 @@ fn parse_codex_session(path: &Path) -> Option<SessionInfo> {
         if name.is_empty() {
             if let Some(t) = payload.get("content").and_then(first_text) {
                 let t = t.trim();
-                if !t.is_empty() {
-                    name = t.chars().take(64).collect();
+                if !t.is_empty() && !t.starts_with('<') {
+                    name = one_sentence(t);
                 }
             }
         }
@@ -591,4 +639,59 @@ fn parse_codex_session(path: &Path) -> Option<SessionInfo> {
         cost_usd: 0.0,
         active: now_ms() - last_ms < 10 * 60 * 1000,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn one_sentence_cuts_at_sentence_end() {
+        assert_eq!(
+            one_sentence("Build the PRD. Then start implementing the MVP."),
+            "Build the PRD"
+        );
+        // A '.' inside a filename is not a sentence end.
+        assert_eq!(one_sentence("fix app.js please"), "fix app.js please");
+        // Only the first non-empty line counts, trailing colon dropped.
+        assert_eq!(one_sentence("\nFiles to review:\n- a.rs\n- b.rs"), "Files to review");
+    }
+
+    #[test]
+    fn one_sentence_caps_length_on_word_boundary() {
+        let long = "word ".repeat(40);
+        let out = one_sentence(&long);
+        assert!(out.chars().count() <= 71, "got {} chars", out.chars().count());
+        assert!(out.ends_with('…'));
+    }
+
+    fn si(name: &str, cwd: &str, last_ms: i64) -> SessionInfo {
+        SessionInfo {
+            id: format!("{name}-{last_ms}"),
+            name: name.into(),
+            cwd: cwd.into(),
+            branch: String::new(),
+            model: String::new(),
+            client: String::new(),
+            last_ms,
+            messages: 0,
+            tokens: 0,
+            context_tokens: 0,
+            cost_usd: 0.0,
+            active: false,
+        }
+    }
+
+    #[test]
+    fn dedupe_keeps_newest_copy_per_cwd_and_name() {
+        let v = vec![
+            si("Fix login", "C:/proj/BillShare", 300),
+            si("fix login", "c:/proj/billshare", 200), // same chat, older resume file
+            si("Fix login", "C:/proj/Other", 100),     // same name, different repo — kept
+        ];
+        let out = dedupe(v);
+        assert_eq!(out.len(), 2);
+        assert_eq!(out[0].last_ms, 300);
+        assert_eq!(out[1].cwd, "C:/proj/Other");
+    }
 }
