@@ -89,7 +89,31 @@ pub struct AgentInfo {
     pub model: String,
     /// working | waiting | stopped (main agent) · running | done (sub-agents)
     pub status: String,
+    /// Very short (few-word) task summary shown on the agent row.
     pub goal: String,
+    /// Fuller description of what the agent is doing, shown when expanded.
+    pub detail: String,
+}
+
+/// First `max_words` words of `s` (with an ellipsis if truncated) — the
+/// few-word summary shown on a collapsed agent row.
+fn short_goal(s: &str, max_words: usize) -> String {
+    let mut words = s.split_whitespace();
+    let head: Vec<&str> = words.by_ref().take(max_words).collect();
+    let mut out = head.join(" ");
+    if words.next().is_some() {
+        out.push('…');
+    }
+    out
+}
+
+/// Clip to `max_chars` characters (with an ellipsis) for the expanded detail.
+fn clip(s: &str, max_chars: usize) -> String {
+    let mut out: String = s.chars().take(max_chars).collect();
+    if s.chars().count() > max_chars {
+        out.push('…');
+    }
+    out
 }
 
 fn find_claude_file(id: &str) -> Option<std::path::PathBuf> {
@@ -126,7 +150,7 @@ pub fn session_agents(provider: &str, id: &str) -> Vec<AgentInfo> {
     let mut main_model = String::new();
     let mut last_ms = 0i64;
     let mut goal = String::new();
-    let mut subs: Vec<(String, String, String)> = Vec::new(); // (tool_id, name, goal)
+    let mut subs: Vec<(String, String, String, String)> = Vec::new(); // (tool_id, name, desc, prompt)
     let mut done: std::collections::HashSet<String> = std::collections::HashSet::new();
 
     for line in text.lines() {
@@ -151,7 +175,7 @@ pub fn session_agents(provider: &str, id: &str) -> Vec<AgentInfo> {
             if let Some(t) = v.pointer("/message/content").and_then(first_text) {
                 let t = t.trim();
                 if !t.is_empty() && !t.starts_with('<') {
-                    goal = t.chars().take(90).collect();
+                    goal = t.to_string();
                 }
             }
         }
@@ -165,15 +189,17 @@ pub fn session_agents(provider: &str, id: &str) -> Vec<AgentInfo> {
                             .and_then(|x| x.as_str())
                             .unwrap_or("subagent")
                             .to_string();
-                        let g: String = b
+                        let desc = b
                             .pointer("/input/description")
-                            .or_else(|| b.pointer("/input/prompt"))
                             .and_then(|x| x.as_str())
                             .unwrap_or("")
-                            .chars()
-                            .take(90)
-                            .collect();
-                        subs.push((tid, name, g));
+                            .to_string();
+                        let prompt = b
+                            .pointer("/input/prompt")
+                            .and_then(|x| x.as_str())
+                            .unwrap_or("")
+                            .to_string();
+                        subs.push((tid, name, desc, prompt));
                     }
                     Some("tool_result") => {
                         if let Some(tid) = b.get("tool_use_id").and_then(|x| x.as_str()) {
@@ -189,19 +215,26 @@ pub fn session_agents(provider: &str, id: &str) -> Vec<AgentInfo> {
     if main_model.is_empty() {
         main_model = "claude".into();
     }
+    let main_status = agent_status(last_ms);
     let mut out = vec![AgentInfo {
         name: "Main agent".into(),
         model: main_model,
-        status: agent_status(last_ms).to_string(),
-        goal: if goal.is_empty() { "—".into() } else { goal },
+        status: main_status.to_string(),
+        goal: if goal.is_empty() { "—".into() } else { short_goal(&goal, 7) },
+        detail: if goal.is_empty() { "—".into() } else { clip(&goal, 400) },
     }];
-    // Most-recent sub-agents first, capped.
-    for (tid, name, g) in subs.into_iter().rev().take(8) {
+    // Most-recent sub-agents first, capped. A stopped chat can't have running
+    // sub-agents — a Task whose result never landed is finished, not live.
+    for (tid, name, desc, prompt) in subs.into_iter().rev().take(8) {
+        let summary = if desc.is_empty() { &prompt } else { &desc };
+        let detail = if prompt.is_empty() { &desc } else { &prompt };
+        let running = !done.contains(&tid) && main_status != "stopped";
         out.push(AgentInfo {
             name,
             model: "sub-agent".into(),
-            status: if done.contains(&tid) { "done".into() } else { "running".into() },
-            goal: if g.is_empty() { "—".into() } else { g },
+            status: if running { "running".into() } else { "done".into() },
+            goal: if summary.is_empty() { "—".into() } else { short_goal(summary, 7) },
+            detail: if detail.is_empty() { "—".into() } else { clip(detail, 400) },
         });
     }
     out
@@ -236,7 +269,7 @@ fn codex_agents(id: &str) -> Vec<AgentInfo> {
         if let Some(t) = payload.get("content").and_then(first_text) {
             let t = t.trim();
             if !t.is_empty() && !t.starts_with('<') {
-                goal = t.chars().take(90).collect();
+                goal = t.to_string();
             }
         }
     }
@@ -247,7 +280,8 @@ fn codex_agents(id: &str) -> Vec<AgentInfo> {
         name: "Main agent".into(),
         model,
         status: agent_status(last_ms).to_string(),
-        goal: if goal.is_empty() { "—".into() } else { goal },
+        goal: if goal.is_empty() { "—".into() } else { short_goal(&goal, 7) },
+        detail: if goal.is_empty() { "—".into() } else { clip(&goal, 400) },
     }]
 }
 

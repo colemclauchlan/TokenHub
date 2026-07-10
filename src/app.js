@@ -525,15 +525,32 @@ function sessionDetailHtml(s) {
 
 const AG_LABEL = { working: "Working", waiting: "Waiting", stopped: "Stopped", running: "Running", done: "Done" };
 const AG_DOT = { working: "working", waiting: "waiting", stopped: "off", running: "working", done: "off" };
+// One agent inside a chat: a compact row (name · model, few-word goal, status)
+// that expands to a fuller description of what the agent is doing.
 function agentRow(a) {
   return `<div class="ag-row">
-    <span class="sl-dot ${AG_DOT[a.status] || "off"}"></span>
-    <div class="ag-main">
-      <div class="ag-name">${escapeHtml(a.name)} <span class="muted">· ${escapeHtml(shortModel(a.model))}</span></div>
-      <div class="ag-goal">${escapeHtml(a.goal || "—")}</div>
+    <div class="ag-top" title="Show what this agent is doing">
+      <span class="sl-dot ${AG_DOT[a.status] || "off"}"></span>
+      <div class="ag-main">
+        <div class="ag-name">${escapeHtml(a.name)} <span class="muted">· ${escapeHtml(shortModel(a.model))}</span></div>
+        <div class="ag-goal">${escapeHtml(a.goal || "—")}</div>
+      </div>
+      <span class="ag-status">${AG_LABEL[a.status] || escapeHtml(a.status || "")}</span>
+      <button class="ag-exp" title="Details">▸</button>
     </div>
-    <span class="ag-status">${AG_LABEL[a.status] || escapeHtml(a.status || "")}</span>
+    <div class="ag-detail">${escapeHtml(a.detail || a.goal || "—")}</div>
   </div>`;
+}
+// Wire up expand/collapse on each agent row after (re)rendering a chat's agent list.
+function bindAgentRows(box) {
+  box.querySelectorAll(".ag-row .ag-top").forEach((top) => top.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const row = top.closest(".ag-row");
+    const open = row.classList.toggle("open");
+    const b = top.querySelector(".ag-exp");
+    if (b) b.textContent = open ? "▾" : "▸";
+    fitWindow();
+  }));
 }
 
 // Sessions = chats with an agent active in the last 30 minutes.
@@ -598,9 +615,11 @@ async function loadSessions() {
           const box = r.querySelector(".sl-agents");
           try {
             const agents = await invoke("get_session_agents", { provider: r.dataset.provider, id: r.dataset.id });
+            const running = agents.filter((a) => a.status === "working" || a.status === "running").length;
             box.innerHTML = agents.length
-              ? '<div class="ag-head">Agents</div>' + agents.map(agentRow).join("")
+              ? `<div class="ag-head">Agents · ${agents.length}${running ? ` (${running} active)` : ""}</div>` + agents.map(agentRow).join("")
               : '<div class="hint" style="padding:6px 2px">No agent detail available.</div>';
+            bindAgentRows(box);
           } catch (err) { box.innerHTML = '<div class="hint" style="padding:6px 2px">Could not read agents.</div>'; }
         }
         fitWindow();

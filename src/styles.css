@@ -281,12 +281,17 @@ html, body {
 .sl-agents { display: none; margin-top: 8px; }
 .statline.expanded .sl-agents { display: block; }
 .ag-head { font-size: 10px; font-weight: 650; color: var(--muted-2); margin: 2px 0 4px; text-transform: uppercase; letter-spacing: .4px; }
-.ag-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-top: 1px solid #1c2027; }
+.ag-row { padding: 5px 0; border-top: 1px solid #1c2027; }
 .ag-row:first-of-type { border-top: 0; }
+.ag-top { display: flex; align-items: center; gap: 8px; cursor: pointer; }
 .ag-main { flex: 1; min-width: 0; }
 .ag-name { font-size: 12.5px; font-weight: 600; }
 .ag-goal { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ag-status { font-size: 11px; color: var(--muted); font-weight: 600; flex: none; }
+.ag-exp { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 12px; padding: 0 2px; line-height: 1; flex: none; }
+.ag-exp:hover { color: var(--text); }
+.ag-detail { display: none; margin: 6px 0 2px 17px; padding: 7px 9px; font-size: 11.5px; line-height: 1.45; color: var(--muted); background: #12151a; border: 1px solid #20252e; border-radius: 8px; white-space: pre-wrap; word-break: break-word; }
+.ag-row.open .ag-detail { display: block; }
 /* Water guilt meter (joke, opt-in) */
 .jokebox { display: flex; align-items: center; gap: 12px; }
 .joke-drop { font-size: 30px; line-height: 1; filter: drop-shadow(0 2px 3px rgba(74,168,201,.4)); animation: bob 2.4s ease-in-out infinite; }
