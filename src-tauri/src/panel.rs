@@ -36,9 +36,12 @@ pub fn position_minibar(win: &WebviewWindow, corner: &str) {
         let left = mp.x + margin;
         let right = mp.x + ms.width as i32 - w - margin;
         let top = mp.y + margin;
-        // flush just above the taskbar (visible + clickable — embedding a widget
-        // inside the Win11 taskbar breaks cross-process click input)
-        let bottom = mp.y + ms.height as i32 - taskbar - h;
+        // overlay the taskbar band, vertically centered in it (the window is
+        // always-on-top so it renders over the taskbar; it stays a normal
+        // top-level window because reparenting into the Win11 taskbar breaks
+        // cross-process click input)
+        let bottom = (mp.y + ms.height as i32 - taskbar + ((taskbar - h) / 2).max(0))
+            .min(mp.y + ms.height as i32 - h);
         let (x, y) = match corner {
             "bottomRight" => (right, bottom),
             "topLeft" => (left, top),

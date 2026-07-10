@@ -186,6 +186,8 @@ function render(providerKey) {
 
   const theme = THEME[providerKey] || THEME.claude;
   document.documentElement.style.setProperty("--accent", theme.accent);
+  // Codex bars stay blue at every fill level (matches the mini-bar).
+  document.documentElement.classList.toggle("prov-codex", providerKey === "codex");
 
   // limits — usage bars for a single provider; quota status cards for Overview
   const limitsCard = document.querySelector(".card.limits");

@@ -16,6 +16,17 @@ pub fn create(app: &tauri::AppHandle, corner: &str) -> tauri::Result<WebviewWind
         .focused(false)
         .build()?;
     crate::panel::position_minibar(&win, corner);
+    // The bar overlaps the taskbar, which is also a topmost window — clicking
+    // the taskbar raises it within the topmost band and would bury the bar.
+    // Re-assert topmost periodically (no-op flicker-free when already on top);
+    // exits once the window is closed (set_always_on_top starts failing).
+    let w = win.clone();
+    std::thread::spawn(move || loop {
+        std::thread::sleep(std::time::Duration::from_millis(1500));
+        if w.set_always_on_top(true).is_err() {
+            break;
+        }
+    });
     Ok(win)
 }
 

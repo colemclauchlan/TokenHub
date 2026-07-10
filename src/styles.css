@@ -116,6 +116,9 @@ html, body {
 .seg .blk.on { background: var(--accent); }
 .seg .blk.warn { background: var(--amber); }
 .seg .blk.crit { background: #d85c4a; }
+/* Codex bars stay blue at every fill level (accent = blue on the Codex tab) */
+.prov-codex .seg .blk.warn,
+.prov-codex .seg .blk.crit { background: var(--accent); }
 .limit-meta { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .limit-meta .pct { color: var(--text); }
 .limits-src { margin-top: 6px; font-size: 10.5px; color: var(--muted-2); text-align: right; }

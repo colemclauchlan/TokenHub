@@ -31,6 +31,8 @@ pub struct OAuthCreds {
     pub access_token: String,
     pub refresh_token: Option<String>,
     pub expires_at_ms: Option<i64>,
+    /// ChatGPT account id (Codex only) — required as a header by its usage API.
+    pub account_id: Option<String>,
 }
 
 #[derive(Clone, Debug)]
@@ -83,6 +85,7 @@ pub fn load_claude_oauth() -> Option<OAuthCreds> {
             .get("expiresAt")
             .or_else(|| o.get("expires_at"))
             .and_then(|x| x.as_i64()),
+        account_id: None,
     })
 }
 
@@ -127,21 +130,30 @@ pub fn load_codex_oauth() -> Option<OAuthCreds> {
             .and_then(|x| x.as_str())
             .map(String::from),
         expires_at_ms: None,
+        account_id: tok
+            .get("account_id")
+            .or_else(|| tok.get("accountId"))
+            .and_then(|x| x.as_str())
+            .map(String::from),
     })
 }
 
-pub fn build_codex_usage_request(access_token: &str) -> HttpRequest {
+pub fn build_codex_usage_request(access_token: &str, account_id: Option<&str>) -> HttpRequest {
     let url = env_or(
         &["AIUSAGEBAR_CODEX_USAGE_URL", "TERMTRACKER_CODEX_USAGE_URL"],
         "https://chatgpt.com/backend-api/codex/usage",
     );
+    let mut headers = vec![
+        ("Authorization".into(), format!("Bearer {access_token}")),
+        ("Content-Type".into(), "application/json".into()),
+    ];
+    if let Some(id) = account_id {
+        headers.push(("chatgpt-account-id".into(), id.to_string()));
+    }
     HttpRequest {
         method: "GET",
         url,
-        headers: vec![
-            ("Authorization".into(), format!("Bearer {access_token}")),
-            ("Content-Type".into(), "application/json".into()),
-        ],
+        headers,
         body: None,
     }
 }
@@ -211,7 +223,7 @@ pub fn fetch_claude_quota<T: Transport>(t: &T) -> Result<QuotaWindows, String> {
 
 pub fn fetch_codex_quota<T: Transport>(t: &T) -> Result<QuotaWindows, String> {
     let creds = load_codex_oauth().ok_or("no Codex OAuth creds found")?;
-    let req = build_codex_usage_request(&creds.access_token);
+    let req = build_codex_usage_request(&creds.access_token, creds.account_id.as_deref());
     let body = t.send(&req)?;
     Ok(parse_usage_response(&body))
 }
