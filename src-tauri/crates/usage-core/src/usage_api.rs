@@ -194,8 +194,11 @@ fn window_from_obj(o: &serde_json::Value) -> Option<QuotaWindow> {
         .or_else(|| o.get("percent"))
         .or_else(|| o.get("usage"))
         .and_then(|x| x.as_f64())?;
-    // normalize percent (0..100) → 0..1
-    let util = if util > 1.0 { util / 100.0 } else { util };
+    // The live endpoints report percent on a 0–100 scale (verified against
+    // api.anthropic.com/api/oauth/usage: `"utilization": 19.0` = 19%). Always
+    // divide — the old "small values are 0..1 fractions" heuristic misread a
+    // real 1% as 100% and could fire a false capped-out alert.
+    let util = util / 100.0;
     let reset_ms = o
         .get("reset_ms")
         .and_then(|x| x.as_i64())
@@ -241,19 +244,28 @@ mod tests {
 
     #[test]
     fn parses_percent_and_reset() {
+        // Shape matches the live api.anthropic.com/api/oauth/usage response:
+        // top-level five_hour/seven_day with percent-scale utilization.
         let json = r#"{
-          "windows": {
-            "five_hour": { "utilization": 36, "resets_at": "2026-07-05T13:00:00Z" },
-            "seven_day": { "utilization": 0.23, "reset_ms": 1751800000000 }
-          }
+          "five_hour": { "utilization": 19.0, "resets_at": "2026-07-10T09:29:59.510799+00:00" },
+          "seven_day": { "utilization": 7.0, "reset_ms": 1751800000000 }
         }"#;
         let q = parse_usage_response(json);
         let five = q.five_hour.unwrap();
-        assert!((five.utilization - 0.36).abs() < 1e-9);
+        assert!((five.utilization - 0.19).abs() < 1e-9);
         assert!(five.reset_ms > 0);
         let seven = q.seven_day.unwrap();
-        assert!((seven.utilization - 0.23).abs() < 1e-9);
+        assert!((seven.utilization - 0.07).abs() < 1e-9);
         assert_eq!(seven.reset_ms, 1751800000000);
+    }
+
+    #[test]
+    fn one_percent_is_not_one_hundred() {
+        // Regression: 1.0 used to be read as a 0..1 fraction (=100%).
+        let json = r#"{"five_hour":{"utilization":1.0},"seven_day":{"utilization":0.5}}"#;
+        let q = parse_usage_response(json);
+        assert!((q.five_hour.unwrap().utilization - 0.01).abs() < 1e-9);
+        assert!((q.seven_day.unwrap().utilization - 0.005).abs() < 1e-9);
     }
 
     #[test]
