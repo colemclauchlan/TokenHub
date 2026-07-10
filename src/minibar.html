@@ -76,11 +76,13 @@
     bar.style.setProperty("--accent", ACCENT[prov] || "#d0774a");
     bar.classList.toggle("codex", prov === "codex");
     document.getElementById("who").textContent = prov + " · scroll to switch";
-    const ind = snap.indicator || {};
+    // Per-provider light: only a Claude chat lights the Claude tracker,
+    // only a Codex chat lights the Codex tracker.
+    const ind = (snap.indicators && snap.indicators[prov]) || {};
     const sd = document.getElementById("sdot");
     if (sd) {
       sd.className = "sdot " + (ind.status && ind.status !== "none" ? ind.status : "");
-      sd.title = ind.chat ? (ind.chat + " — " + ind.status) : "no active chat";
+      sd.title = ind.chat ? (ind.chat + " — " + ind.status) : "no active " + prov + " chat";
     }
     for (const k of ["fiveHour", "sevenDay"]) {
       const row = bar.querySelector('.row[data-k="' + k + '"]'), l = p.limits[k];

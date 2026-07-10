@@ -959,7 +959,7 @@ async function loadSettings() {
     iRow.innerHTML = `<div class="lbl">Agent status chat</div><div class="conn-in"><select id="indSel">${opts}</select></div>`;
     ind.appendChild(iRow);
     const iHint = document.createElement("div"); iHint.className = "hint";
-    iHint.textContent = "The widget light tracks this chat: green = working, amber = waiting for you, grey = stopped.";
+    iHint.textContent = "Each tracker's light follows its own provider's chats (pinned chat overrides its provider): green = working, amber = waiting for you, red = stopped.";
     ind.appendChild(iHint);
     card.appendChild(ind);
     iRow.querySelector("#indSel").addEventListener("change", (e) => { s.indicatorSessionId = e.target.value; push(); });

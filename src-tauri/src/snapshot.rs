@@ -129,6 +129,14 @@ pub struct Indicator {
     pub id: String,
 }
 
+/// One indicator per provider — the widget shows the light that matches the
+/// tracker on screen (Claude chats drive the Claude bar, Codex chats the Codex bar).
+#[derive(Serialize, Clone)]
+pub struct Indicators {
+    pub claude: Indicator,
+    pub codex: Indicator,
+}
+
 #[derive(Serialize, Clone)]
 pub struct AllSnapshots {
     pub claude: ProviderSnapshot,
@@ -136,7 +144,7 @@ pub struct AllSnapshots {
     pub subscription: Subscription,
     #[serde(rename = "pctRemaining")]
     pub pct_remaining: bool,
-    pub indicator: Indicator,
+    pub indicators: Indicators,
     #[serde(rename = "jokeMode")]
     pub joke_mode: bool,
 }
@@ -440,29 +448,40 @@ pub fn build_all(settings: &Settings) -> AllSnapshots {
         currency: "CAD".into(),
     };
 
-    // Widget agent-status indicator: the chosen chat, else the most-recent one.
+    // Widget agent-status indicators, one per provider: a pinned chat drives
+    // its own provider's light; otherwise each light follows that provider's
+    // most-recent chat. Claude chats never light the Codex bar and vice versa.
     let sessions = crate::sessions::all_sessions();
-    let sel = if settings.indicator_session_id.is_empty() {
-        sessions.first()
-    } else {
-        sessions
-            .iter()
-            .find(|s| s.id == settings.indicator_session_id)
-            .or_else(|| sessions.first())
+    let indicator_for = |codex: bool| -> Indicator {
+        let of_provider =
+            |s: &&crate::sessions::SessionInfo| (s.client == "Codex" || s.client == "GPT") == codex;
+        let sel = if settings.indicator_session_id.is_empty() {
+            sessions.iter().find(of_provider)
+        } else {
+            sessions
+                .iter()
+                .filter(of_provider)
+                .find(|s| s.id == settings.indicator_session_id)
+                .or_else(|| sessions.iter().find(of_provider))
+        };
+        match sel {
+            Some(s) => Indicator {
+                status: crate::sessions::agent_status(s.last_ms).to_string(),
+                chat: s.name.clone(),
+                model: s.model.clone(),
+                id: s.id.clone(),
+            },
+            None => Indicator {
+                status: "none".into(),
+                chat: String::new(),
+                model: String::new(),
+                id: String::new(),
+            },
+        }
     };
-    let indicator = match sel {
-        Some(s) => Indicator {
-            status: crate::sessions::agent_status(s.last_ms).to_string(),
-            chat: s.name.clone(),
-            model: s.model.clone(),
-            id: s.id.clone(),
-        },
-        None => Indicator {
-            status: "none".into(),
-            chat: String::new(),
-            model: String::new(),
-            id: String::new(),
-        },
+    let indicators = Indicators {
+        claude: indicator_for(false),
+        codex: indicator_for(true),
     };
 
     AllSnapshots {
@@ -482,7 +501,7 @@ pub fn build_all(settings: &Settings) -> AllSnapshots {
         ),
         subscription,
         pct_remaining: settings.pct_remaining,
-        indicator,
+        indicators,
         joke_mode: settings.joke_mode,
     }
 }
