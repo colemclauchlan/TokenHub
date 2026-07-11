@@ -26,6 +26,7 @@ ureq = { version = "2", features = ["json", "tls"] }
 keyring = { version = "3", features = ["windows-native"] }
 
 [target.'cfg(windows)'.dependencies]
+winreg = "0.52"
 windows = { version = "0.58", features = [
   "Win32_Foundation",
   "Win32_UI_WindowsAndMessaging",

@@ -353,6 +353,8 @@ html, body {
 .toggle.sm { width: 34px; height: 19px; }
 .toggle.sm .knob { width: 15px; height: 15px; }
 .toggle.sm.on .knob { left: 17px; }
+.env-row { display: flex; align-items: center; gap: 8px; margin: 6px 0 2px; font-size: 12px; color: var(--muted); }
+.env-row b { color: var(--text); font-family: ui-monospace, Consolas, monospace; font-weight: 600; }
 .gh-rm { width: 22px; height: 22px; padding: 0; border-radius: 999px; border: 1px solid #333c48; background: #12151a; color: var(--muted); font-size: 15px; line-height: 1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: background .12s, border-color .12s, color .12s; }
 .gh-rm:hover { background: var(--orange); border-color: var(--orange); color: #fff; }
 .repo-row { display: grid; grid-template-columns: 1.5fr 1.3fr .7fr .5fr 1.1fr; gap: 8px; align-items: center; padding: 8px 2px; border-bottom: 1px solid #1c2027; cursor: pointer; font-size: 12px; }

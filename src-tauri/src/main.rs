@@ -417,6 +417,13 @@ fn set_api_key(provider: String, key: String) -> Result<(), String> {
 
 #[tauri::command]
 fn clear_api_key(provider: String) -> Result<(), String> {
+    // If the env var mirrors this key, remove it too so a stale copy
+    // doesn't outlive the credential.
+    if let (Some(k), Some(v)) = (secrets::get_key(&provider), secrets::env_value(&provider)) {
+        if k == v {
+            let _ = secrets::remove_from_env(&provider);
+        }
+    }
     secrets::clear_key(&provider)
 }
 
@@ -432,6 +439,25 @@ fn api_keys_status() -> serde_json::Value {
         "anthropic": secrets::has_key("anthropic"),
         "openai": secrets::has_key("openai"),
     })
+}
+
+/// Which provider keys are exported to the user environment (booleans only).
+#[tauri::command]
+fn api_keys_env_status() -> serde_json::Value {
+    serde_json::json!({
+        "anthropic": secrets::env_status("anthropic"),
+        "openai": secrets::env_status("openai"),
+    })
+}
+
+/// Export a stored key as a user environment variable, or remove it.
+#[tauri::command]
+fn set_api_key_env(provider: String, enabled: bool) -> Result<(), String> {
+    if enabled {
+        secrets::export_to_env(&provider)
+    } else {
+        secrets::remove_from_env(&provider)
+    }
 }
 
 #[tauri::command]
@@ -600,6 +626,8 @@ fn main() {
             clear_api_key,
             validate_api_key,
             api_keys_status,
+            api_keys_env_status,
+            set_api_key_env,
             win_minimize,
             win_close,
             win_toggle_fullscreen

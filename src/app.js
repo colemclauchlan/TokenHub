@@ -1045,7 +1045,7 @@ async function loadSettings() {
     const cs = await invoke("connections_status");
     const badge = (name, ok) => `<div class="conn-badge"><span class="ovs-light ${ok ? "green" : "red"}"></span>${name}: <b>${ok ? "connected" : "sign in via CLI / app"}</b></div>`;
     const ex = document.createElement("div"); ex.className = "conn-status";
-    ex.innerHTML = badge("Claude", cs.claude) + badge("OpenAI / Codex", cs.codex);
+    ex.innerHTML = badge("Claude (Code · Cowork)", cs.claude) + badge("OpenAI / Codex", cs.codex);
     conn.appendChild(ex);
     const note = document.createElement("div"); note.className = "hint";
     note.textContent = 'Exact 5h/7d comes from the provider API using your local Claude Code / Codex sign-in — enable "Match Claude Code counter" above. TokenHub reads local credentials only and never stores your keys.';
@@ -1055,13 +1055,37 @@ async function loadSettings() {
   // API keys — stored encrypted in the OS credential store; never shown or saved to config
   try {
     const ks = await invoke("api_keys_status");
-    const keyRow = (label, prov, stored) => {
+    let ke = { anthropic: false, openai: false };
+    try { ke = await invoke("api_keys_env_status"); } catch (e) {}
+    const keyRow = (label, prov, stored, inEnv) => {
       const row = document.createElement("div");
       row.className = "conn-row";
       row.innerHTML = `<div class="lbl">${label}${stored ? ' <span class="ovs-light green" style="display:inline-block;width:9px;height:9px;vertical-align:middle;margin-left:4px"></span>' : ""}</div>
         <div class="conn-in"><input type="password" placeholder="${stored ? "•••••• stored" : "paste API key"}" />
         <button class="folder-btn kv-save">Save</button>${stored ? '<button class="gh-rm kv-rm" title="Remove">×</button>' : ""}</div>`;
-      const st2 = document.createElement("div"); st2.className = "hint"; row.appendChild(st2);
+      const st2 = document.createElement("div"); st2.className = "hint";
+      // Opt-in: expose the stored key to other apps as a user environment variable.
+      if (stored) {
+        const varName = prov === "openai" ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY";
+        const envRow = document.createElement("div");
+        envRow.className = "env-row";
+        envRow.innerHTML = `<button class="toggle sm ${inEnv ? "on" : ""}" title="Export to your user environment"><span class="knob"></span></button>
+          <span>Expose to other apps as <b>${varName}</b></span>`;
+        const t = envRow.querySelector(".toggle");
+        t.addEventListener("click", async () => {
+          const enable = !t.classList.contains("on");
+          st2.textContent = enable ? "Writing to your user environment…" : "Removing from your environment…";
+          try {
+            await invoke("set_api_key_env", { provider: prov, enabled: enable });
+            t.classList.toggle("on", enable);
+            st2.textContent = enable
+              ? varName + " set — new terminals will pick it up. Note: env vars are readable by any app you run."
+              : varName + " removed from your user environment.";
+          } catch (e) { st2.textContent = "Env update failed: " + e; }
+        });
+        row.appendChild(envRow);
+      }
+      row.appendChild(st2);
       const inp = row.querySelector("input");
       row.querySelector(".kv-save").addEventListener("click", async () => {
         const v = inp.value.trim(); if (!v) return;
@@ -1079,10 +1103,10 @@ async function loadSettings() {
       if (rm) rm.addEventListener("click", async () => { try { await invoke("clear_api_key", { provider: prov }); } catch (e) {} loadSettings(); });
       return row;
     };
-    conn.appendChild(keyRow("Anthropic API key", "anthropic", ks.anthropic));
-    conn.appendChild(keyRow("OpenAI API key", "openai", ks.openai));
+    conn.appendChild(keyRow("Anthropic API key", "anthropic", ks.anthropic, ke.anthropic));
+    conn.appendChild(keyRow("OpenAI API key", "openai", ks.openai, ke.openai));
     const kn = document.createElement("div"); kn.className = "hint";
-    kn.textContent = "Stored in Windows Credential Manager (encrypted) — never written to config or shown here. Used for API-console spend/validation.";
+    kn.textContent = "Keys live in Windows Credential Manager (encrypted) — never written to config or shown here. The env toggle additionally exports a key as a user environment variable for other tools; that copy is only as private as your user account.";
     conn.appendChild(kn);
   } catch (e) {}
   card.appendChild(conn);
