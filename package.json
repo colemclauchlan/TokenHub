@@ -1,8 +1,8 @@
 {
-  "name": "ai-usage-bar",
+  "name": "tokenhub",
   "version": "0.1.0",
   "private": true,
-  "description": "Windows taskbar tracker for Claude Code & Codex usage windows (Tauri v2).",
+  "description": "TokenHub — Windows taskbar tracker for Claude Code, Claude Cowork & OpenAI Codex usage (Tauri v2).",
   "scripts": {
     "tauri": "tauri",
     "dev": "tauri dev",

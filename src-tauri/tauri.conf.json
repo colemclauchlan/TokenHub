@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "AI Usage Bar",
+  "productName": "TokenHub",
   "version": "0.1.0",
-  "identifier": "com.aiusagebar.app",
+  "identifier": "com.colemclauchlan.tokenhub",
   "build": {
     "frontendDist": "../src"
   },

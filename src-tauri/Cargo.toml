@@ -1,7 +1,7 @@
 [package]
 name = "ai-usage-bar"
 version = "0.1.0"
-description = "AI Usage Bar — Windows taskbar tracker for Claude Code & Codex usage windows"
+description = "TokenHub — Windows taskbar tracker for Claude Code & Codex usage windows"
 edition = "2021"
 default-run = "ai-usage-bar"
 
