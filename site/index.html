@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TokenHub — Claude Code &amp; Codex usage limits, live on your Windows taskbar</title>
+  <meta name="description" content="TokenHub is a free, open-source Windows taskbar tracker for Claude Code, Claude Cowork and OpenAI Codex. Real 5-hour and 7-day limit percentages, reset countdowns, live agent status — 100% local, no telemetry.">
+  <meta property="og:title" content="TokenHub — know your limits">
+  <meta property="og:description" content="Your real Claude Code &amp; Codex usage limits, live on the Windows taskbar. Free, open source, 100% local.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://tokenhub-ten.vercel.app/">
+  <meta property="og:image" content="https://tokenhub-ten.vercel.app/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://tokenhub-ten.vercel.app/">
+  <meta name="theme-color" content="#0f1115">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f1115'/%3E%3Crect x='6' y='9' width='13' height='5' rx='1.5' fill='%23d0774a'/%3E%3Crect x='21' y='9' width='5' height='5' rx='1.5' fill='%232a3038'/%3E%3Crect x='6' y='18' width='8' height='5' rx='1.5' fill='%234aa8c9'/%3E%3Crect x='16' y='18' width='5' height='5' rx='1.5' fill='%232a3038'/%3E%3Crect x='23' y='18' width='3' height='5' rx='1.5' fill='%232a3038'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#top" aria-label="TokenHub home">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+        <rect width="32" height="32" rx="7" fill="#171b21"/>
+        <rect x="6" y="9" width="13" height="5" rx="1.5" fill="#d0774a"/>
+        <rect x="21" y="9" width="5" height="5" rx="1.5" fill="#2a3038"/>
+        <rect x="6" y="18" width="8" height="5" rx="1.5" fill="#4aa8c9"/>
+        <rect x="16" y="18" width="5" height="5" rx="1.5" fill="#2a3038"/>
+        <rect x="23" y="18" width="3" height="5" rx="1.5" fill="#2a3038"/>
+      </svg>
+      <span class="brand-name">TokenHub</span>
+    </a>
+    <nav class="nav-links" aria-label="Site">
+      <a href="#minibar">Mini-bar</a>
+      <a href="#features">Features</a>
+      <a href="#accuracy">Accuracy</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a class="nav-gh" href="https://github.com/colemclauchlan/TokenHub" target="_blank" rel="noopener">
+      <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+      <span>GitHub</span>
+    </a>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" id="top" aria-label="Introduction">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="hero-inner">
+      <p class="eyebrow"><span class="dot-duo" aria-hidden="true"><i class="d-claude"></i><i class="d-codex"></i></span>for people who hit the 5-hour wall</p>
+      <h1>Know your limits.</h1>
+      <p class="lede">TokenHub pins your <strong>real</strong> Claude Code, Cowork and Codex usage to the Windows taskbar — live limit percentages, reset countdowns, and what every agent is doing right now. So the cap never surprises you mid-refactor again.</p>
+      <div class="cta-row">
+        <div class="dl" data-dl>
+          <button class="btn btn-primary" type="button" aria-haspopup="true" aria-expanded="false" data-dl-btn>
+            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M1 1h6.5v6.5H1V1zm7.5 0H15v6.5H8.5V1zM1 8.5h6.5V15H1V8.5zm7.5 0H15V15H8.5V8.5z"/></svg>
+            Download for Windows
+            <svg class="caret" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path fill="currentColor" d="M2 4l4 4 4-4z"/></svg>
+          </button>
+          <div class="dl-menu" role="menu" hidden data-dl-menu>
+            <a role="menuitem" href="https://github.com/colemclauchlan/TokenHub/releases/download/v0.1.0/TokenHub_0.1.0_x64_en-US.msi">
+              <span>.msi installer</span><em>recommended · 3.3 MB</em>
+            </a>
+            <a role="menuitem" href="https://github.com/colemclauchlan/TokenHub/releases/download/v0.1.0/TokenHub.exe">
+              <span>.exe standalone</span><em>portable · 8.6 MB</em>
+            </a>
+            <a role="menuitem" class="dl-all" href="https://github.com/colemclauchlan/TokenHub/releases" target="_blank" rel="noopener">
+              <span>All releases on GitHub</span><em>&#8599;</em>
+            </a>
+          </div>
+        </div>
+        <a class="btn btn-ghost" href="https://github.com/colemclauchlan/TokenHub" target="_blank" rel="noopener">View on GitHub</a>
+      </div>
+      <p class="trust">Free forever · MIT licensed · Windows 10 &amp; 11 · no account, no telemetry</p>
+    </div>
+
+    <!-- The flyout panel, open above the tray — exactly what clicking the mini-bar does -->
+    <aside class="flyout" role="img" aria-label="Recreation of the TokenHub flyout panel: Claude at 36%, Codex at 51%, 4.2 million tokens today, one live session">
+      <div class="fly-head" aria-hidden="true">
+        <span class="fly-title">TokenHub</span>
+        <span class="fly-tabs"><i class="on">Overview</i><i>Claude</i><i>Codex</i></span>
+      </div>
+      <div class="fly-body" aria-hidden="true">
+        <div class="fly-provider">
+          <span class="fly-name fly-name--claude">Claude</span>
+          <span class="fly-track"><i class="fly-fill fly-fill--claude" style="--w:36%"></i></span>
+          <span class="fly-pct">36%</span>
+        </div>
+        <div class="fly-provider">
+          <span class="fly-name fly-name--codex">Codex</span>
+          <span class="fly-track"><i class="fly-fill fly-fill--codex" style="--w:51%"></i></span>
+          <span class="fly-pct">51%</span>
+        </div>
+        <div class="fly-stats">
+          <span><b>4.2M</b> tokens today</span>
+          <span><b>6</b> sessions</span>
+          <span><b>$12.40</b> API-list est.</span>
+        </div>
+        <div class="fly-sess">
+          <i class="dot dot--ok dot--pulse"></i>
+          <span class="fly-sess-name">TOKENHUB</span>
+          <span class="fly-sess-sum">— wiring the release pipeline</span>
+        </div>
+      </div>
+      <div class="fly-foot" aria-hidden="true">scroll the bar below to flip providers</div>
+      <span class="fly-stem" aria-hidden="true"></span>
+    </aside>
+    <div class="taskbar" aria-label="Recreation of the TokenHub mini-bar docked on the Windows taskbar">
+      <div class="tb-center" aria-hidden="true">
+        <span class="tb-start"><svg viewBox="0 0 16 16" width="17" height="17"><path fill="#7fb3d9" d="M1 1h6.6v6.6H1V1zm7.4 0H15v6.6H8.4V1zM1 8.4h6.6V15H1V8.4zm7.4 0H15V15H8.4V8.4z"/></svg></span>
+        <span class="tb-app"></span><span class="tb-app"></span><span class="tb-app tb-app--active"></span>
+      </div>
+      <div class="tb-right">
+        <div class="minibar" data-minibar tabindex="0" role="button" aria-label="TokenHub mini-bar demo. Scroll, click or press Enter to flip between Claude and Codex.">
+          <span class="mb-light" data-mb-light data-state="ok" aria-hidden="true"></span>
+          <div class="mb-window">
+            <div class="mb-prism" data-mb-prism>
+              <div class="mb-face mb-face--claude" aria-hidden="false">
+                <div class="mb-row">
+                  <span class="mb-lab">5h</span>
+                  <span class="mb-segs" data-segs data-fill="36" data-tone="claude"></span>
+                  <span class="mb-val">36% · 3h</span>
+                </div>
+                <div class="mb-row">
+                  <span class="mb-lab">7d</span>
+                  <span class="mb-segs" data-segs data-fill="23" data-tone="claude"></span>
+                  <span class="mb-val">23% · 3d</span>
+                </div>
+              </div>
+              <div class="mb-face mb-face--codex" aria-hidden="true">
+                <div class="mb-row">
+                  <span class="mb-lab">5h</span>
+                  <span class="mb-segs" data-segs data-fill="51" data-tone="codex"></span>
+                  <span class="mb-val">51% · 2h</span>
+                </div>
+                <div class="mb-row">
+                  <span class="mb-lab">7d</span>
+                  <span class="mb-segs" data-segs data-fill="44" data-tone="codex"></span>
+                  <span class="mb-val">44% · 2d</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="tb-tray" aria-hidden="true">
+          <span class="tb-chev">&#8963;</span>
+          <span class="tb-lang">ENG<br>US</span>
+          <span class="tb-icons">
+            <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M8 12.5a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4zM3.5 9.6l1.7 1.7a4 4 0 0 1 5.6 0l1.7-1.7a6.4 6.4 0 0 0-9 0zM.7 6.8l1.7 1.7a8 8 0 0 1 11.2 0l1.7-1.7a10.4 10.4 0 0 0-14.6 0z"/></svg>
+            <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M2 6v4h3l4 3.5v-11L5 6H2zm9.5 2a2.7 2.7 0 0 0-1.5-2.4v4.8A2.7 2.7 0 0 0 11.5 8zM10 1.9v1.6A4.6 4.6 0 0 1 10 12.5v1.6a6.2 6.2 0 0 0 0-12.2z"/></svg>
+          </span>
+          <span class="tb-clock"><span data-clock-time>10:13 PM</span><br><span data-clock-date>26/02/2026</span></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ANATOMY ============ -->
+  <section class="section" id="minibar" aria-labelledby="minibar-h">
+    <div class="container">
+      <p class="eyebrow"><span class="dot-duo" aria-hidden="true"><i class="d-claude"></i><i class="d-codex"></i></span>the mini-bar</p>
+      <h2 id="minibar-h">Two bars. Everything you actually need.<span class="rule-duo" aria-hidden="true"></span></h2>
+      <p class="section-lede">A slim widget docked overtop the taskbar — always visible, never in the way. It answers the only three questions that matter while an agent runs: <em>how much is left, when does it reset, and does it need me?</em></p>
+
+      <div class="anatomy reveal">
+        <div class="anatomy-stage">
+          <div class="minibar minibar--xl" data-minibar-xl aria-label="Enlarged TokenHub mini-bar demo">
+            <span class="mb-light" data-anat-light data-state="ok" aria-hidden="true"></span>
+            <div class="mb-window">
+              <div class="mb-face mb-face--claude">
+                <div class="mb-row">
+                  <span class="mb-lab">5h</span>
+                  <span class="mb-segs" data-segs data-fill="36" data-tone="claude" data-animate></span>
+                  <span class="mb-val">36% · 3h</span>
+                </div>
+                <div class="mb-row">
+                  <span class="mb-lab">7d</span>
+                  <span class="mb-segs" data-segs data-fill="23" data-tone="claude" data-animate></span>
+                  <span class="mb-val">23% · 3d</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="anatomy-states" role="group" aria-label="Try the status light">
+            <span class="anatomy-states-lab">status light:</span>
+            <button class="state-chip" type="button" data-set-state="ok" aria-pressed="true"><i class="dot dot--ok"></i>working</button>
+            <button class="state-chip" type="button" data-set-state="wait" aria-pressed="false"><i class="dot dot--wait"></i>needs you</button>
+            <button class="state-chip" type="button" data-set-state="stop" aria-pressed="false"><i class="dot dot--stop"></i>stopped</button>
+          </div>
+        </div>
+
+        <ul class="anatomy-legend">
+          <li><span class="leg-key leg-key--light" aria-hidden="true"></span><div><strong>Status light</strong> — what your agent is doing <em>right now</em>. Green: working. Amber: waiting on you. Red: stopped. Per provider — the Claude bar only reflects Claude chats, the Codex bar only Codex.</div></li>
+          <li><span class="leg-key leg-key--segs" aria-hidden="true"></span><div><strong>5h &amp; 7d windows</strong> — both rolling limits your subscription actually enforces, as segmented bars with the exact percentage.</div></li>
+          <li><span class="leg-key leg-key--count" aria-hidden="true"></span><div><strong>Reset countdown</strong> — when the window rolls over, as a countdown or a clock time. No more guessing when you're back.</div></li>
+          <li><span class="leg-key leg-key--flip" aria-hidden="true"></span><div><strong>Scroll to flip</strong> — mouse-wheel over the bar rolls a 3D prism between Claude and Codex. Try it on the one in the taskbar above.</div></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FEATURES ============ -->
+  <section class="section section--alt" id="features" aria-labelledby="features-h">
+    <div class="container">
+      <div class="feat-intro">
+        <div class="feat-intro-copy">
+          <p class="eyebrow"><span class="dot-duo" aria-hidden="true"><i class="d-claude"></i><i class="d-codex"></i></span>beyond the bar</p>
+          <h2 id="features-h">Click it, and the whole picture opens.<span class="rule-duo" aria-hidden="true"></span></h2>
+          <p class="section-lede">The mini-bar is the tip. A click opens the full flyout: analytics, live agents, history and your repos. Built with Tauri v2 — a Rust core and a web UI — so it stays tiny and fast.</p>
+          <ul class="feat-points">
+            <li>Usage, Sessions, History, Open and Git — one panel</li>
+            <li>Overview or per-provider views for Claude and Codex</li>
+            <li>Combined monthly subscription total across both</li>
+          </ul>
+        </div>
+        <figure class="shot reveal">
+          <img src="assets/flyout.png" width="255" height="576" loading="lazy"
+               alt="The real TokenHub flyout panel: Usage, Sessions, History, Open and Git tabs; Claude and ChatGPT/Codex quota chips; combined token, session and message totals with cache breakdown; today's usage with a last-hour rate chart; per-model share of the period.">
+          <figcaption>The actual flyout — not a mockup.</figcaption>
+        </figure>
+      </div>
+
+      <div class="grid">
+
+        <article class="card card--wide card--split reveal">
+          <h3><span class="card-ico" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8.5h2.7L6 3.5l4 9.5 1.8-4.5h2.7"/></svg></span>Live agent monitoring</h3>
+          <p>Every active chat is a card — the repo it's in and a one-sentence summary of what it's doing. Open the dropdown to see the agents inside: the main agent and its sub-agents, each with a goal, a status, and an expandable detail of what it's working on. Idle chats drop off after 10 minutes.</p>
+          <div class="sess" role="img" aria-label="Demo session card: TokenHub repo, wiring the release pipeline, three agents">
+            <div class="sess-head">
+              <span class="dot dot--ok dot--pulse" aria-hidden="true"></span>
+              <span class="sess-name">TOKENHUB</span>
+              <span class="sess-sum">— wiring the release pipeline</span>
+              <span class="chip chip--claude">Claude</span>
+            </div>
+            <details class="sess-agents" open>
+              <summary>3 agents</summary>
+              <ul>
+                <li><i class="dot dot--ok" aria-hidden="true"></i><span class="ag-name">main</span><span class="ag-goal">orchestrating the MSI build</span><span class="ag-state ag-state--ok">working</span></li>
+                <li><i class="dot dot--wait" aria-hidden="true"></i><span class="ag-name">tests</span><span class="ag-goal">cargo test — 2 failures, needs a call</span><span class="ag-state ag-state--wait">waiting for you</span></li>
+                <li><i class="dot dot--ok" aria-hidden="true"></i><span class="ag-name">explore</span><span class="ag-goal">mapping src-tauri/commands</span><span class="ag-state ag-state--ok">working</span></li>
+              </ul>
+            </details>
+          </div>
+        </article>
+
+        <article class="card reveal">
+          <h3><span class="card-ico" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 13.5V8.5M8 13.5v-9M13 13.5v-3"/></svg></span>Deep usage analytics</h3>
+          <p>Overview, Claude and Codex views: total tokens, sessions, messages, API-list cost estimates, cache-read / cache-write / input / output breakdown, per-model share, and a combined monthly subscription total.</p>
+          <div class="mini-panel" role="img" aria-label="Demo analytics panel: today's tokens, last-hour rate sparkline and 14-day trend">
+            <div class="mp-row">
+              <div class="mp-stat"><span class="mp-num">4.2M</span><span class="mp-lab">tokens today</span></div>
+              <div class="mp-stat"><span class="mp-num">6</span><span class="mp-lab">sessions</span></div>
+              <div class="mp-stat"><span class="mp-num">83%</span><span class="mp-lab">cache reads</span></div>
+            </div>
+            <svg class="mp-spark" viewBox="0 0 220 40" preserveAspectRatio="none" aria-hidden="true">
+              <path class="mp-spark-line" d="M0 34 L18 30 L36 31 L54 22 L72 26 L90 14 L108 18 L126 8 L144 16 L162 12 L180 20 L198 6 L220 10" fill="none"/>
+            </svg>
+            <div class="mp-trend" data-trend aria-hidden="true"></div>
+            <span class="mp-cap">last hour · 14-day trend</span>
+          </div>
+        </article>
+
+        <article class="card reveal">
+          <h3><span class="card-ico" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2.5v4h4"/><path d="M3 10.2a5.5 5.5 0 1 0 1.2-5.9L2.5 6.5"/></svg></span>Full history</h3>
+          <p>Every past chat, grouped by project, with totals per repo. Rename it, delete it — or <strong>resume it in its terminal</strong> with one click and pick up exactly where the conversation left off.</p>
+          <div class="hist" aria-hidden="true">
+            <div class="hist-row"><span class="hist-repo">tokenhub</span><span class="hist-sum">fix prism roll jitter</span><button class="hist-act" type="button" tabindex="-1">resume &#8599;</button></div>
+            <div class="hist-row"><span class="hist-repo">billshare</span><span class="hist-sum">split-by-item parser</span><button class="hist-act" type="button" tabindex="-1">resume &#8599;</button></div>
+          </div>
+        </article>
+
+        <article class="card reveal">
+          <h3><span class="card-ico" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="4.5" cy="3.5" r="1.7"/><circle cx="4.5" cy="12.5" r="1.7"/><circle cx="11.5" cy="5" r="1.7"/><path d="M4.5 5.2v5.6M11.5 6.7c0 2.4-3.2 3-7 3.6"/></svg></span>Git dashboard</h3>
+          <p>Your local repos at a glance — branch, dirty files, ahead/behind, last commit — next to every repo on your GitHub accounts. One place to see what state everything is in before you point an agent at it.</p>
+          <div class="repo" aria-hidden="true">
+            <span class="repo-branch">main</span>
+            <span class="repo-dirty">3 dirty</span>
+            <span class="repo-sync">&#8593;2 &#8595;0</span>
+            <span class="repo-last">last: rebuild landing hero</span>
+          </div>
+        </article>
+
+        <article class="card reveal">
+          <h3><span class="card-ico" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 6a4.5 4.5 0 0 0-9 0c0 3.8-1.5 4.8-1.5 4.8h12S12.5 9.8 12.5 6"/><path d="M6.8 13.3a1.4 1.4 0 0 0 2.4 0"/></svg></span>Alerts before the wall</h3>
+          <p>Notifications at 75, 90 and 95% of either window — enough warning to wrap the task, commit, and plan around the reset instead of being cut off by it.</p>
+          <div class="toast" aria-hidden="true">
+            <span class="toast-dot"></span>
+            <span class="toast-txt"><strong>Claude 5h at 90%</strong><br>resets 4:12 PM — land the branch</span>
+          </div>
+        </article>
+
+        <article class="card card--wide reveal">
+          <h3><span class="card-ico" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 4.5h5M12.5 4.5H14M2 11.5h2M8.5 11.5H14"/><circle cx="9.5" cy="4.5" r="1.7"/><circle cx="5.5" cy="11.5" r="1.7"/></svg></span>Quality of life</h3>
+          <p>The small stuff, done properly.</p>
+          <ul class="chips" aria-label="Quality of life features">
+            <li>global hotkey <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>U</kbd></li>
+            <li>tray icon styles</li>
+            <li>used &#8596; remaining toggle</li>
+            <li>display profiles</li>
+            <li>autostart</li>
+            <li>opt-in water-guilt meter <span class="drop" aria-hidden="true">&#128167;</span></li>
+          </ul>
+          <p class="fine">The water meter estimates your session's datacenter cooling water. It changes nothing. It just knows.</p>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ACCURACY ============ -->
+  <section class="section" id="accuracy" aria-labelledby="accuracy-h">
+    <div class="container">
+      <p class="eyebrow"><span class="dot-duo" aria-hidden="true"><i class="d-claude"></i><i class="d-codex"></i></span>how the numbers stay accurate</p>
+      <h2 id="accuracy-h">Real numbers, not vibes.<span class="rule-duo" aria-hidden="true"></span></h2>
+      <p class="section-lede">Most trackers guess your limits by counting tokens locally and hoping the math matches the provider's. TokenHub doesn't guess.</p>
+
+      <div class="acc">
+        <ol class="acc-steps">
+          <li class="reveal">
+            <span class="acc-n">1</span>
+            <div><strong>Your sign-in, your machine</strong><p>Opt in, and TokenHub reads the local OAuth sign-in your CLI already uses. It never leaves your machine and is never sent anywhere except to the provider you signed in with.</p></div>
+          </li>
+          <li class="reveal">
+            <span class="acc-n">2</span>
+            <div><strong>Asked at the source</strong><p>It queries the provider's own usage API — the same source Claude Code's built-in counter reads. The 5h and 7d percentages are the provider's numbers, not a reconstruction.</p></div>
+          </li>
+          <li class="reveal">
+            <span class="acc-n">3</span>
+            <div><strong>Honest when offline</strong><p>If the API is unreachable, TokenHub falls back to a local estimate from your own logs — and labels it <span class="est">EST</span> so you can never mistake a guess for the real thing.</p></div>
+          </li>
+        </ol>
+
+        <div class="acc-visual reveal" role="img" aria-label="The CLI counter and TokenHub showing the same 36% five-hour usage">
+          <div class="term">
+            <div class="term-head"><span></span><span></span><span></span><em>claude — /usage</em></div>
+            <pre class="term-body"><code><span class="t-dim">&gt;</span> /usage
+<span class="t-dim">Current session (5h):</span> <span class="t-claude">36% used</span> · resets 3h
+<span class="t-dim">Current week (7d):</span>   <span class="t-claude">23% used</span> · resets 3d</code></pre>
+          </div>
+          <div class="acc-match">
+            <span class="acc-match-line" aria-hidden="true"></span>
+            <span class="acc-match-tick">same source, same number</span>
+            <span class="acc-match-line" aria-hidden="true"></span>
+          </div>
+          <div class="bigbars">
+            <div class="bigbar">
+              <span class="bb-lab">5h</span>
+              <div class="bb-track"><div class="bb-fill bb-fill--claude" data-bb="36"></div></div>
+              <span class="bb-val">36%</span>
+            </div>
+            <div class="bigbar">
+              <span class="bb-lab">7d</span>
+              <div class="bb-track"><div class="bb-fill bb-fill--claude" data-bb="23"></div></div>
+              <span class="bb-val">23%</span>
+            </div>
+            <span class="bb-cap">TokenHub mini-bar, same moment</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PRIVACY ============ -->
+  <section class="section section--alt" id="privacy" aria-labelledby="privacy-h">
+    <div class="container">
+      <p class="eyebrow"><span class="dot-duo" aria-hidden="true"><i class="d-claude"></i><i class="d-codex"></i></span>privacy</p>
+      <h2 id="privacy-h">Nothing leaves your machine.<span class="rule-duo" aria-hidden="true"></span></h2>
+      <p class="section-lede">Not a promise in a policy — an architecture. There is no server to send anything to.</p>
+
+      <div class="priv-grid">
+        <div class="priv reveal">
+          <h3>Reads your logs, locally</h3>
+          <p>TokenHub watches the files your tools already write on disk:</p>
+          <ul class="paths">
+            <li><code>~/.claude/projects</code></li>
+            <li><code>Cowork session dirs</code></li>
+            <li><code>~/.codex/sessions</code></li>
+          </ul>
+        </div>
+        <div class="priv reveal">
+          <h3>No server. No telemetry. No account.</h3>
+          <p>Nothing is uploaded, tracked or phoned home. The only network calls are the ones you opt into: asking your provider for your own usage numbers.</p>
+        </div>
+        <div class="priv reveal">
+          <h3>Keys stay in Credential Manager</h3>
+          <p>Any API key you enter is stored in Windows Credential Manager, encrypted by the OS — not in a config file, not in the cloud.</p>
+        </div>
+        <div class="priv reveal">
+          <h3>Open source. Verify it.</h3>
+          <p>MIT licensed, every line on GitHub. Don't take this page's word for any of it — <a href="https://github.com/colemclauchlan/TokenHub" target="_blank" rel="noopener">read the code</a>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FAQ ============ -->
+  <section class="section" id="faq" aria-labelledby="faq-h">
+    <div class="container container--narrow">
+      <p class="eyebrow"><span class="dot-duo" aria-hidden="true"><i class="d-claude"></i><i class="d-codex"></i></span>faq</p>
+      <h2 id="faq-h">Fair questions.<span class="rule-duo" aria-hidden="true"></span></h2>
+
+      <details class="faq">
+        <summary>Is it free?</summary>
+        <p>Yes — free and MIT-licensed open source. No pro tier, no trial, no "free for now". If it ever saves you from one blown deadline it has paid for itself, which is convenient, because you can't pay for it.</p>
+      </details>
+      <details class="faq">
+        <summary>Windows only?</summary>
+        <p>For now, yes — Windows 10 and 11, using WebView2. The mini-bar is built around the Windows taskbar, which doesn't exist anywhere else. No macOS or Linux build yet, and we won't pretend one is imminent.</p>
+      </details>
+      <details class="faq">
+        <summary>Does my data leave my machine?</summary>
+        <p>No. TokenHub reads your machine's own log files and has no server, telemetry or account. The only outbound requests are the opt-in usage queries to your own provider, using your own sign-in. It's open source, so this is verifiable rather than a vibe.</p>
+      </details>
+      <details class="faq">
+        <summary>Does it work with both Claude and Codex?</summary>
+        <p>Yes — Claude Code, Claude Cowork and OpenAI Codex/ChatGPT, side by side. Each provider gets its own bar, its own status light and its own analytics view; scroll on the mini-bar to flip between them.</p>
+      </details>
+      <details class="faq">
+        <summary>How do the percentages match the real counter?</summary>
+        <p>Because they come from the same place. With your opt-in, TokenHub reads the provider's usage API using the local OAuth sign-in your CLI already has — the same source Claude Code's built-in counter uses. When the API is unreachable it shows a local estimate instead, clearly labelled <span class="est">EST</span>.</p>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ CLOSING CTA ============ -->
+  <section class="section closing" aria-labelledby="closing-h">
+    <div class="container container--narrow closing-inner">
+      <h2 id="closing-h">Put your limits where you can see them.</h2>
+      <div class="cta-row cta-row--center">
+        <a class="btn btn-primary" href="https://github.com/colemclauchlan/TokenHub/releases" target="_blank" rel="noopener">Get TokenHub on GitHub</a>
+        <a class="btn btn-ghost" href="https://github.com/colemclauchlan/TokenHub" target="_blank" rel="noopener">Star the repo</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="container footer-inner">
+    <div class="footer-brand">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+        <rect width="32" height="32" rx="7" fill="#171b21"/>
+        <rect x="6" y="9" width="13" height="5" rx="1.5" fill="#d0774a"/>
+        <rect x="21" y="9" width="5" height="5" rx="1.5" fill="#2a3038"/>
+        <rect x="6" y="18" width="8" height="5" rx="1.5" fill="#4aa8c9"/>
+        <rect x="16" y="18" width="5" height="5" rx="1.5" fill="#2a3038"/>
+        <rect x="23" y="18" width="3" height="5" rx="1.5" fill="#2a3038"/>
+      </svg>
+      <div>
+        <strong>TokenHub</strong>
+        <p>Built with Tauri v2 — Rust core, web UI. Windows 10/11 (WebView2).</p>
+      </div>
+    </div>
+    <nav class="footer-links" aria-label="Footer">
+      <a href="https://github.com/colemclauchlan/TokenHub" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/colemclauchlan/TokenHub/releases" target="_blank" rel="noopener">Releases</a>
+      <a href="https://github.com/colemclauchlan/TokenHub/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
+      <a href="https://github.com/colemclauchlan/TokenHub/issues" target="_blank" rel="noopener">Report an issue</a>
+    </nav>
+  </div>
+  <div class="container footer-note">
+    <p>No server. No telemetry. No account. Not affiliated with Anthropic or OpenAI — just watching their meters for you.</p>
+  </div>
+</footer>
+
+<script src="assets/main.js" defer></script>
+</body>
+</html>

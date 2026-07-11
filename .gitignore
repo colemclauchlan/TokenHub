@@ -1,14 +1,19 @@
 # Rust / Tauri
 **/target/
+
 # Node
 node_modules/
+
 # Build output
 /dist/
+
+# Local tooling & editor state
+.claude/
+.remember/
+.vscode/
+.env*
+
 # Logs / OS
 *.log
 .DS_Store
 Thumbs.db
-# Local meta (task-observer log stays private)
-skill-observations/
-# Temp reference conversions
-_ref_*.png
